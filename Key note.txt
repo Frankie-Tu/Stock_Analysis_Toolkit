@@ -1,0 +1,8 @@
+Known Issue:
+P/E negative rank as top company
+throwing away too many columns due to NA
+Downsize Important list: shares short, short ratio, shares short prior month
+
+Improvement target:
+letting user know which items are excluded in score calculation
+in statistics output, allow user to click on link to go to the chart section
