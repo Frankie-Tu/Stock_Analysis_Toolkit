@@ -5,6 +5,7 @@ from collections import OrderedDict
 import pandas
 import pdb
 import sys
+import getpass
 
 
 class ScrapperApp:
@@ -117,11 +118,13 @@ if __name__ == '__main__':
 
     user_input = user_input.replace(' ', '').split(sep=",")
 
-    if my_system == "linux":
-        store_location = "/home/frankietu/stock_data/"
+    my_user = getpass.getuser()
+
+    if my_system == "linux" or my_system == "darwin":
+        store_location = "/home/" + my_user + "/stock_data/"
     elif my_system == "win32":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
     mymain = ScrapperApp(user_input, foldername='Retail', comprehensive=True,
-                         filesave=False, storelocation=store_location)
+                         filesave=True, storelocation=store_location)
     mymain.scrapper_start()

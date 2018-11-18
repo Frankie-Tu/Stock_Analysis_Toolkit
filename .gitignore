@@ -3,4 +3,5 @@ test.xlsx
 Stock Data/
 .idea/
 .spyproject/
+*.pyc
 venv/

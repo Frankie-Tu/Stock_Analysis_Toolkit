@@ -7,6 +7,7 @@ import pdb
 import os
 import math
 import sys
+import getpass
 
 
 class StatementScrap:
@@ -226,8 +227,10 @@ if __name__ == '__main__':
 
     user_input = user_input.replace(' ','').split(sep=',')
 
-    if my_system == "linux":
-        store_location = "/home/frankietu/Stock_data/"
+    my_user = getpass.getuser()
+
+    if my_system == "linux" or my_system == "darwin":
+        store_location = "/home/" + my_user + "/Stock_data/"
     elif my_system == "win32":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
