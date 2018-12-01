@@ -55,6 +55,10 @@ class SummaryScrap:
             # get 52 week price info
             print('Scrapping 52 week price data for ' + item)
             r = requests.get(url)
+
+            while r.status_code != 200:
+                r = requests.get(url)
+
             my_soup = Soup(r.text, 'html.parser')
             all_html = my_soup.find_all('table', {'class': "W(100%)"})
             fifty2_week_range = all_html[0].find_all('tr', {'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px) '})[5]

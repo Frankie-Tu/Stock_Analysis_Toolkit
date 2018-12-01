@@ -55,6 +55,10 @@ class StatementScrap:
               "/" + self.statement_type[statement.upper()] + "?p=" + self.ticker
 
         r = requests.get(url)
+
+        while r.status_code != 200:
+            r = requests.get(url)
+
         my_soup = Soup(r.text, 'html.parser')
         all_html = my_soup.find_all('table', {'class': 'Lh(1.7) W(100%) M(0)'})[0].\
             find_all(True, {'class': ['Bdbw(1px) Bdbc($c-fuji-grey-c) Bdbs(s) H(36px)', 'Bdbw(0px)! H(36px)']})

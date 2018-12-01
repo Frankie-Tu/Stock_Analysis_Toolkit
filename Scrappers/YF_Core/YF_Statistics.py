@@ -80,6 +80,10 @@ class StatisticsScrap:
             # Fetch data
             print("Sending requests for " + items + '...')
             r = requests.get(url)
+
+            while r.status_code != 200:
+                r = requests.get(url)
+
             my_soup = Soup(r.text, 'html.parser')
             all_html = my_soup.find_all('div', {'class': statistics_class})
 
