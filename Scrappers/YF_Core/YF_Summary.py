@@ -62,7 +62,7 @@ class SummaryScrap:
             my_soup = Soup(r.text, 'html.parser')
             all_html = my_soup.find_all('table', {'class': "W(100%)"})
             fifty2_week_range = all_html[0].find_all('tr', {'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px) '})[5]
-            fifty2_week_range_value = fifty2_week_range.find_all('td', {'class': 'Ta(end) Fw(b) Lh(14px)'})[0]
+            fifty2_week_range_value = fifty2_week_range.find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0]
             fifty2_week_range_value = fifty2_week_range_value.text.split(sep=' - ')
             fifty2_week_range_low = fifty2_week_range_value[0]
             fifty2_week_range_high = fifty2_week_range_value[1]
@@ -72,7 +72,7 @@ class SummaryScrap:
             all_html = my_soup.find_all('table', {'class': "W(100%) M(0) Bdcl(c)"})
             one_year_target = all_html[0].find_all('tr', {
                 'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px) Bdbw(0)! '})
-            one_year_target = one_year_target[0].find_all('td', {'class': 'Ta(end) Fw(b) Lh(14px)'})
+            one_year_target = one_year_target[0].find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})
             one_year_target = one_year_target[0].span.text
 
             # Stock price. percentage change
