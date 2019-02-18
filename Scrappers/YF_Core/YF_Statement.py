@@ -234,7 +234,7 @@ if __name__ == '__main__':
     my_user = getpass.getuser()
 
     if my_system == "linux" or my_system == "darwin":
-        store_location = "/home/" + my_user + "/Stock_data/"
+        store_location = "/home/" + my_user + "/stock_data/"
     elif my_system == "win32":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
