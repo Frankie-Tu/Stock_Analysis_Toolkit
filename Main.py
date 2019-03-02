@@ -34,7 +34,7 @@ mymain = ScrapperApp(['goos.to','shop.to','Gib-a.to'],
 mymain.scrapper_start()
 
 mymain = ScrapperApp(['fts.to','npi.to','cpx.to','rnw.to','trp.to','cp.to','l.to','sap.to',
-                      'atd-b.to','ctc-a.to','mru.to','fcr.to','ap-un.to','car-un.to','hr-un.to',
+                      'atd-b.to','ctc-a.to','mru.to','fcr.to','ap-un.to','hr-un.to',
                       'rei-un.to','bam-a.to','na.to','ry.to','cm.to','bns.to'],
                      foldername='EVERYTHING', comprehensive=True,
                      filesave=True)
