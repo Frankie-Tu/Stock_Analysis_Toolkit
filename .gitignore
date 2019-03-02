@@ -5,3 +5,4 @@ Stock Data/
 .spyproject/
 *.pyc
 venv/
+Main*
