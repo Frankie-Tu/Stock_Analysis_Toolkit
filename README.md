@@ -16,14 +16,13 @@ name Scrappers.
 ```
 
 ## Warning
-```
-This is project based my interests in investments and it is **only** 
+This is project based my interests in investments and it is **only**
 meant to be used as a showcase to my abilities in performing 
 data analysis using Pandas library and general Python programming.
 Therefore, methods used to perform stock analysis in this application
 **does not** suggest how stocks are or should be analyzed in capital
 markets by professional analysts. 
-```
+
 
 ## Dependencies
 ```
