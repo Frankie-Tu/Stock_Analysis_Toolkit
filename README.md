@@ -3,14 +3,14 @@
 ## Goal
 ```
 A self-developed stock analysis tool aimed to ease stock valuation
-process to enable user to analyze large number of stocks at scale.
+process and enable user to analyze large number of stocks at scale.
 ```
 
 ## Mechanism
 ```
 Perform comparative analysis on the stock symbols passed to 
 Scrappers/Main.py and score each company on different categories
-based on how they stand against each other to generate final score.
+based on how they stand against each other to generate final scores.
 Stock informations are scrapped from Yahoo Finance, thus the 
 name Scrappers.
 ```
@@ -37,7 +37,7 @@ However, user should be able to run the application with the following dependenc
  - Scipy
 ```
 
-## instruction
+## Instructions
 ```
 1. In Git:
  - git clone https://github.com/Frankie-Tu/Stock_Analysis_Toolkit.git
