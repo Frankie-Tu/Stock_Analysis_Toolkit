@@ -41,5 +41,5 @@ However, user should be able to run the application with the following dependenc
 1. In Git:
  - git clone https://github.com/Frankie-Tu/Stock_Analysis_Toolkit.git
 
-2. Import as a project into your prefered IDE and run Scrapper/Main.py in interactively
+2. Import as a project into your prefered IDE and run Scrapper/Main.py interactively
 ```
