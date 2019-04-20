@@ -32,7 +32,7 @@ class SummaryScrap:
         self.dataframe = None   # Place holder, summary information for tickers
         self.my_system = sys.platform
 
-        if self.my_system == 'linux':
+        if self.my_system == 'linux' or self.my_system == 'darwin':
             self.separator = "/"
         elif self.my_system == 'win32':
             self.separator = "\\"
@@ -166,5 +166,5 @@ if __name__ == "__main__":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
     myclass2 = SummaryScrap(user_input, storelocation=store_location,
-                            filesave=True)
+                            filesave=False)
     myclass2.summary_scrap()

@@ -42,10 +42,10 @@ for ticker in user_input:
 result_table = pd.DataFrame(result_dict, index=user_input).transpose()
 print(result_table)
 
-if not os.path.exists("D:\Yahoo Finance\Stock Data\Important3"):
-    os.makedirs("D:\Yahoo Finance\Stock Data\Important3")
+#if not os.path.exists("D:\Yahoo Finance\Stock Data\Important3"):
+#    os.makedirs("D:\Yahoo Finance\Stock Data\Important3")
 
-result_table.to_csv("D:\Yahoo Finance\Stock Data\Important3\\file.csv")
+#result_table.to_csv("D:\Yahoo Finance\Stock Data\Important3\\file.csv")
 
 
 

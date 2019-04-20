@@ -36,7 +36,7 @@ class StatementScrap:
         self.statement_growth = None  # Place holder,
         self.my_system = sys.platform
 
-        if self.my_system == 'linux':
+        if self.my_system == 'linux' or self.my_system == 'darwin':
             self.separator = "/"
         elif self.my_system == 'win32':
             self.separator = "\\"
@@ -240,7 +240,7 @@ if __name__ == '__main__':
 
     for item in user_input:
         income_s = StatementScrap(item, storelocation=store_location, foldername='test',
-                                  filesave=True)
+                                  filesave=False)
         income_s.downloader(user_input2)
         income_s.growth_calculation()
 

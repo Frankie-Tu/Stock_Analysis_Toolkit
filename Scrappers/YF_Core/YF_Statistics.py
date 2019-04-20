@@ -38,7 +38,7 @@ class StatisticsScrap:
         self.ignored_stats = []  # place holder, showing all the stats that were ignored in the calculation
         self.my_system = sys.platform
 
-        if self.my_system == 'linux':
+        if self.my_system == 'linux' or self.my_system == 'darwin':
             self.separator = "/"
         elif self.my_system == 'win32':
             self.separator = "\\"
@@ -384,7 +384,7 @@ if __name__ == "__main__":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
     myclass = StatisticsScrap(user_input, storelocation=store_location, foldername='test',
-                              filesave=True)
+                              filesave=False)
     myclass.statistics_scrap()
     myclass.downsize()
     myclass.scoring()
