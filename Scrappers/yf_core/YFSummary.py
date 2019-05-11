@@ -9,7 +9,7 @@ import sys
 import getpass
 
 
-class SummaryScrap:
+class YFSummary:
     """
     Note: Scrap data from Summary Tab
 
@@ -23,12 +23,12 @@ class SummaryScrap:
     filesave: type = boolean
     """
 
-    def __init__(self, args, storelocation="D:\Yahoo Finance\Stock Data\\",
-                 foldername='test_folder', filesave=False):
+    def __init__(self, args, store_location="D:\Yahoo Finance\Stock Data\\",
+                 folder_name='test_folder', filesave=False):
         self.args = args
-        self.storelocation = storelocation
-        self.foldername = foldername
-        self.filesave = filesave
+        self.store_location = store_location
+        self.folder_name = folder_name
+        self.file_save = filesave
         self.dataframe = None   # Place holder, summary information for tickers
         self.my_system = sys.platform
 
@@ -136,13 +136,13 @@ class SummaryScrap:
                 self.dataframe[ticker] = val
 
         # Check if User wants to save the result to hard drive.
-        if self.filesave:
+        if self.file_save:
             try:
-                if not os.path.exists(self.storelocation + self.foldername):
-                    print('Creating path: ' + self.storelocation + self.foldername)
-                    os.makedirs(self.storelocation + self.foldername)
+                if not os.path.exists(self.store_location + self.folder_name):
+                    print('Creating path: ' + self.store_location + self.folder_name)
+                    os.makedirs(self.store_location + self.folder_name)
 
-                with open(self.storelocation + self.foldername + self.separator + 'Summary_data.csv', mode='w') as file:
+                with open(self.store_location + self.folder_name + self.separator + 'Summary_data.csv', mode='w') as file:
                     print('Saving data...')
                     file.write('Summary' + '\n')
                     self.dataframe.to_csv(file)
@@ -165,6 +165,6 @@ if __name__ == "__main__":
     elif my_system == "win32":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
-    myclass2 = SummaryScrap(user_input, storelocation=store_location,
-                            filesave=False)
+    myclass2 = YFSummary(user_input, store_location=store_location,
+                         filesave=False)
     myclass2.summary_scrap()

@@ -1,6 +1,6 @@
-from Scrappers.YF_Core import YF_Statistics as yf
-from Scrappers.YF_Core import YF_Summary as yfs
-from Scrappers.YF_Core import YF_Statement as yfst
+from Scrappers.yf_core import YFStatistics as yf
+from Scrappers.yf_core import YFSummary as yfs
+from Scrappers.yf_core import YFStatement as yfst
 from collections import OrderedDict
 import pandas
 import pdb
@@ -31,8 +31,8 @@ class ScrapperApp:
             self.separator = "\\"
 
     def scrapper_start(self):
-        myclass = yf.StatisticsScrap(self.stock_ticker_list, storelocation=self.storelocation,
-                                     foldername=self.foldername, filesave=self.filesave)
+        myclass = yf.YFStatistics(self.stock_ticker_list, store_location=self.storelocation,
+                                  folder_name=self.foldername, file_save=self.filesave)
         myclass.statistics_scrap()
         myclass.downsize()
         myclass.scoring()
@@ -41,14 +41,14 @@ class ScrapperApp:
         self.ranking = myclass.scoring_df
         self.score = myclass.scoring_dict
 
-        myclass2 = yfs.SummaryScrap(self.stock_ticker_list, storelocation=self.storelocation,
-                                    foldername=self.foldername, filesave=self.filesave)
+        myclass2 = yfs.YFSummary(self.stock_ticker_list, store_location=self.storelocation,
+                                 folder_name=self.foldername, filesave=self.filesave)
         myclass2.summary_scrap()
 
         # whether comprehensive analysis, comprehensive means including statement analysis
         if self.comprehensive:
-            cagr_all = yfst.statements(self.stock_ticker_list, foldername=self.foldername,
-                                       filesave=self.filesave, storelocation=self.storelocation)
+            cagr_all = yfst.statements(self.stock_ticker_list, folder_name=self.foldername,
+                                       file_save=self.filesave, store_location=self.storelocation)
 
             cagr = cagr_all[0]
             cagr_compare = cagr_all[1]

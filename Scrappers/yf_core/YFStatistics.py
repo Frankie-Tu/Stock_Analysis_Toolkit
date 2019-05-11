@@ -9,7 +9,7 @@ import sys
 import getpass
 
 
-class StatisticsScrap:
+class YFStatistics:
     """
     Note: Scraps data from Statistics Tab
 
@@ -23,12 +23,12 @@ class StatisticsScrap:
     filesave: type = boolean
     """
 
-    def __init__(self, args, storelocation="D:\Yahoo Finance\Stock Data\\",
-                 foldername='test_folder', filesave=False):
+    def __init__(self, args, store_location="D:\Yahoo Finance\Stock Data\\",
+                 folder_name='test_folder', file_save=False):
         self.args = args
-        self.storelocation = storelocation
-        self.foldername = foldername
-        self.filesave = filesave
+        self.store_location = store_location
+        self.folder_name = folder_name
+        self.file_save = file_save
         self.dataframe = None   # Place holder, all stats
         self.df = None          # Place holder, downsized df
         self.target_list = None  # Place holder, row item targets
@@ -144,13 +144,13 @@ class StatisticsScrap:
                 self.dataframe[ticker] = val
 
         # Check if User wants to save result to the hard drive
-        if self.filesave:
+        if self.file_save:
             try:
                 # if path doesn't exist, create
-                if not os.path.exists(self.storelocation + self.foldername):
-                    os.makedirs(self.storelocation + self.foldername)
+                if not os.path.exists(self.store_location + self.folder_name):
+                    os.makedirs(self.store_location + self.folder_name)
 
-                self.dataframe.to_csv(self.storelocation + self.foldername +
+                self.dataframe.to_csv(self.store_location + self.folder_name +
                                       self.separator + 'Statistics_data.csv')
             except IOError:
                 print("Please close your freaking file!!!")
@@ -222,9 +222,9 @@ class StatisticsScrap:
         self.df = self.dataframe.iloc[mylist, :]
 
         # Check if the User wants to save the result to the hard drive
-        if self.filesave:
+        if self.file_save:
             try:
-                self.df.to_csv(self.storelocation + self.foldername + self.separator + 'Statistics_data_abstract.csv')
+                self.df.to_csv(self.store_location + self.folder_name + self.separator + 'Statistics_data_abstract.csv')
             except IOError:
                 print('Close your freaking file!!!')
 
@@ -347,20 +347,20 @@ class StatisticsScrap:
 
         self.scoring_df = pd.DataFrame(mydict2, index=self.df.columns).transpose()
 
-        if self.filesave:
+        if self.file_save:
             try:
                 # if path doesn't exist, create
-                if not os.path.exists(self.storelocation + self.foldername):
-                    os.makedirs(self.storelocation + self.foldername)
+                if not os.path.exists(self.store_location + self.folder_name):
+                    os.makedirs(self.store_location + self.folder_name)
 
-                with open(self.storelocation + self.foldername + self.separator +
+                with open(self.store_location + self.folder_name + self.separator +
                           'Ranking_information.csv', mode='w') as file:
                     file.write('Ranking Info' + '\n')
                     self.scoring_df.to_csv(file)
             except IOError:
                 print("Please close your freaking file!!!")
 
-            with open(self.storelocation + self.foldername + self.separator +
+            with open(self.store_location + self.folder_name + self.separator +
                       'Ranking_information.csv', mode='a') as file:
                 file.write('\n'+'Raw Data' + '\n')
                 self.df.iloc[all_value, :].to_csv(file, header=True)
@@ -383,8 +383,8 @@ if __name__ == "__main__":
     elif my_system == "win32":
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
-    myclass = StatisticsScrap(user_input, storelocation=store_location, foldername='test',
-                              filesave=False)
+    myclass = YFStatistics(user_input, store_location=store_location, folder_name='test',
+                           file_save=False)
     myclass.statistics_scrap()
     myclass.downsize()
     myclass.scoring()

@@ -1,11 +1,11 @@
-from Scrappers.YF_Core import YF_Statement
+from Scrappers.yf_core import YFStatement
 from collections import OrderedDict
 import pandas as pd
 import os
 import pdb
 
 '''
-designed to return the CAGR for the most important items from the three statements
+To return the CAGR for the most important items from the three statements
 '''
 
 user_input = input("Please select the ticker you wish you analyze: ")
@@ -15,29 +15,29 @@ result_dict = OrderedDict()
 n = 1
 
 for ticker in user_input:
-    statementscrap = YF_Statement.StatementScrap(ticker, storelocation="NA",
-                                                 foldername="NA", filesave=False)
+    statement_scrap = YFStatement.YFStatement(ticker, store_location="NA",
+                                              folder_name="NA", file_save=False)
     print("Getting data for " + ticker)
 
     for statement_type in ("IS", "BS"):
-        statementscrap.downloader(statement_type)
-        statementscrap.growth_calculation()
+        statement_scrap.downloader(statement_type)
+        statement_scrap.growth_calculation()
 
         if n == 1:
             if statement_type == "IS":
                 for item in [0,1,2,4,8,11,15,20,22]:
-                    result_dict[statementscrap.statement_growth.index[item]] = [round(statementscrap.statement_growth.iloc[item, 3],4)]
+                    result_dict[statement_scrap.statement_growth.index[item]] = [round(statement_scrap.statement_growth.iloc[item, 3], 4)]
             elif statement_type == "BS":
                 for item in [5,13,17,23,32,33]:
-                    result_dict[statementscrap.statement_growth.index[item]] = [round(statementscrap.statement_growth.iloc[item,3],4)]
+                    result_dict[statement_scrap.statement_growth.index[item]] = [round(statement_scrap.statement_growth.iloc[item, 3], 4)]
                     n += 1
         else:
             if statement_type == "IS":
                 for item in [0,1,2,4,8,11,15,20,22]:
-                    result_dict[statementscrap.statement_growth.index[item]].append(round(statementscrap.statement_growth.iloc[item, 3],4))
+                    result_dict[statement_scrap.statement_growth.index[item]].append(round(statement_scrap.statement_growth.iloc[item, 3], 4))
             elif statement_type == "BS":
                 for item in [5,13,17,23,32,33]:
-                    result_dict[statementscrap.statement_growth.index[item]].append(round(statementscrap.statement_growth.iloc[item,3],4))
+                    result_dict[statement_scrap.statement_growth.index[item]].append(round(statement_scrap.statement_growth.iloc[item, 3], 4))
 
 result_table = pd.DataFrame(result_dict, index=user_input).transpose()
 print(result_table)

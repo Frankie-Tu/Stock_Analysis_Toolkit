@@ -10,7 +10,7 @@ import sys
 import getpass
 
 
-class StatementScrap:
+class YFStatement:
     """
     Note: Scrap data from Financial Tab
 
@@ -23,11 +23,11 @@ class StatementScrap:
     foldername: type = str \n
     filesave: type = boolean
     """
-    def __init__(self, ticker, storelocation, foldername, filesave):
+    def __init__(self, ticker, store_location, folder_name, file_save):
         self.ticker = ticker
-        self.storelocation = storelocation
-        self.foldername = foldername
-        self.filesave = filesave
+        self.store_location = store_location
+        self.foldername = folder_name
+        self.filesave = file_save
         self.statement_type = {'IS': 'financials',
                                'BS': 'balance-sheet',
                                'CF': 'cash-flow'}
@@ -157,16 +157,16 @@ class StatementScrap:
 
         if self.filesave:
             try:
-                if not os.path.exists(self.storelocation + self.foldername + self.separator + self.statement):
-                    os.makedirs(self.storelocation + self.foldername + self.separator + self.statement)
+                if not os.path.exists(self.store_location + self.foldername + self.separator + self.statement):
+                    os.makedirs(self.store_location + self.foldername + self.separator + self.statement)
 
-                with open(self.storelocation + self.foldername + self.separator + self.statement +
+                with open(self.store_location + self.foldername + self.separator + self.statement +
                           self.separator + self.statement + '_G_' +
                           self.ticker + '.csv', mode='w') as file:
                     file.write(self.statement + '\n')
                     self.raw_data.to_csv(file)
 
-                with open(self.storelocation + self.foldername + self.separator + self.statement +
+                with open(self.store_location + self.foldername + self.separator + self.statement +
                           self.separator + self.statement + '_G_' +
                           self.ticker + '.csv', mode='a') as file:
                     file.write("%" + "\n")
@@ -176,8 +176,8 @@ class StatementScrap:
                 print("Please close your freaking file!!!")
 
 
-def statements(arg, storelocation,
-               foldername, filesave):
+def statements(arg, store_location,
+               folder_name, file_save):
     """
     designed to iterate items from args entered through Class Statement_Scrap
     """
@@ -189,8 +189,8 @@ def statements(arg, storelocation,
     for items in arg:
         local_list = []
         local_list2 = []
-        income_ss = StatementScrap(items, storelocation, foldername,
-                                   filesave)
+        income_ss = YFStatement(items, store_location, folder_name,
+                                file_save)
         income_ss.downloader('IS')
         income_ss.growth_calculation()
 
@@ -239,8 +239,8 @@ if __name__ == '__main__':
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
     for item in user_input:
-        income_s = StatementScrap(item, storelocation=store_location, foldername='test',
-                                  filesave=False)
+        income_s = YFStatement(item, store_location=store_location, folder_name='test',
+                               file_save=False)
         income_s.downloader(user_input2)
         income_s.growth_calculation()
 
