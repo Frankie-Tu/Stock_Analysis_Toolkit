@@ -79,10 +79,10 @@ class YFStatistics:
 
             # Fetch data
             print("Sending requests for " + items + '...')
-            r = requests.get(url)
+            r = requests.get(url, timeout=1)
 
             while r.status_code != 200:
-                r = requests.get(url)
+                r = requests.get(url, timeout=1)
 
             my_soup = Soup(r.text, 'html.parser')
             all_html = my_soup.find_all('div', {'class': statistics_class})

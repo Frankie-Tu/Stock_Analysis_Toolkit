@@ -6,3 +6,4 @@ Stock Data/
 *.pyc
 venv/
 Main*
+.vscode/

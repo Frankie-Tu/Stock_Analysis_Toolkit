@@ -54,10 +54,10 @@ class YFStatement:
         url = "https://ca.finance.yahoo.com/quote/" + self.ticker + \
               "/" + self.statement_type[statement.upper()] + "?p=" + self.ticker
 
-        r = requests.get(url)
+        r = requests.get(url, timeout=1)
 
         while r.status_code != 200:
-            r = requests.get(url)
+            r = requests.get(url, timeout=1)
 
         my_soup = Soup(r.text, 'html.parser')
         all_html = my_soup.find_all('table', {'class': 'Lh(1.7) W(100%) M(0)'})[0].\
