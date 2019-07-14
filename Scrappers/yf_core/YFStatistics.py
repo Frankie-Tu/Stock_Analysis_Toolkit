@@ -57,8 +57,9 @@ class YFStatistics:
             url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
             statistics_class = 'Mstart(a) Mend(a)'
             statistics_section_class = 'Mb(10px) Pend(20px) smartphone_Pend(0px)'
+            statistics_section_class_val_measure="Mb(10px) smartphone_Pend(0px) Pend(20px)"
             statistics_section_class2 = 'Pstart(20px) smartphone_Pstart(0px)'
-            td_class = 'Fz(s) Fw(500) Ta(end)'
+            td_class = 'Fz(s) Fw(500) Ta(end) Pstart(10px) Miw(60px)'
             table_class = 'table-qsp-stats Mt(10px)'
 
             def iteration_function(data):
@@ -92,14 +93,14 @@ class YFStatistics:
 
             # Valuation Measures:
             print('Computing Valuation Measures...')
-            valuation_measures = all_html[0].find_all('div', {'class': statistics_section_class})[0].find_all("tr")
+            valuation_measures = all_html[0].find_all('div', {'class': statistics_section_class_val_measure})[0].find_all("tr")
 
             for item,num in zip(valuation_measures, valuation_measures):
                 result_dict[item.span.text] = num.find_all('td', {'class': td_class})[0].text
 
             # Financial Highlights:
             print("Computing Financial Highlights...")
-            financial_highlights = all_html[0].find_all('div', {'class': statistics_section_class})[1].find_all('table', {'class': table_class})
+            financial_highlights = all_html[0].find_all('div', {'class': statistics_section_class})[0].find_all('table', {'class': table_class})
 
             iteration_function(financial_highlights)
 
@@ -231,19 +232,17 @@ class YFStatistics:
     def target_rows(self, value_list):
         """
         :param value_list:
-        :return: target_list:
+        :return: None
 
         Note: This method is not meant to be called directly by the user.
         By default, this method is called within method scoring(self)
+
+        Updates self.target_list during every call
         """
         NA_list = []
         for value in value_list:
-            for i in list(self.df.iloc[value, :].values):
-                if i == 'N/A':
-                    NA_list.append(value)
-                    break    # break out i loop and continue to next value
-                else:
-                    pass
+            if 'N/A' in list(self.df.iloc[value, :].values):
+                NA_list.append(value)
 
         self.target_list = []
         for i in value_list:
@@ -261,15 +260,12 @@ class YFStatistics:
 
         # Stock tickers
         stocks = list(self.df.columns)
+        
         # create scorecard, initialize
+        mydict = OrderedDict()
+
         for item in stocks:
-            try:
-                mydict
-            except:
-                mydict = OrderedDict()
-                mydict[item] = 0
-            else:
-                mydict[item] = 0
+            mydict[item] = 0
 
         mydict2 = OrderedDict()
 
