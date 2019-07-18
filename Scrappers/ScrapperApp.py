@@ -36,7 +36,7 @@ class ScrapperApp:
         myclass.statistics_scrap()
         myclass.downsize()
         myclass.scoring()
-        trailing_pe_list = myclass.df.iloc[0, :]
+        trailing_pe_list = myclass.df_downsized.iloc[0, :]
         implied_peg = OrderedDict()
         self.ranking = myclass.scoring_df
         self.score = myclass.scoring_dict
