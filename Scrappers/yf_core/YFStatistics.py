@@ -232,7 +232,7 @@ class YFStatistics:
 
     def target_rows(self, value_list):
         """
-        :param value_list:
+        :param value_list<String>[]:
         :return: None
 
         Note: This method is not meant to be called directly by the user.
@@ -241,12 +241,11 @@ class YFStatistics:
         Updates self.target_list during every call
         """
 
-        na_list = list(filter(lambda x: 'N/A' in list(self.df_downsized.iloc[x, :].values), value_list))
+        na_list = list(filter(lambda x: 'N/A' in list(self.df_downsized.loc[x, :].values), value_list))
 
         self.target_list = list(filter(lambda x: x not in na_list, value_list))
 
-        for item in na_list:
-            self.ignored_stats.append(list(self.df_downsized.index)[item])
+        self.ignored_stats.extend(na_list)
 
     def scoring(self):
         """
@@ -265,26 +264,33 @@ class YFStatistics:
 
         mydict2 = OrderedDict()
 
-        # find all row lower the better
-        low_value = [num for num in range(5)]
-        low_value.append(16)
+        # all values lower the better
+        low_values = ["Trailing P/E",
+                     "Forward P/E",
+                     "PEG Ratio (5 yr expected)",
+                     "Price/Sales",
+                     "Price/Book",
+                     "Total Debt/Equity"]
 
-        # find all rows where higher the better
-        high_value = [num for num in range(5, 9)]
-        high_value.extend([10, 14, 17, 33, 34])
+        # all values higher the better
+        high_values = ["Profit Margin",
+                      "Operating Margin",
+                      "Return on Assets",
+                      "Return on Equity",
+                      "Quarterly Revenue Growth",
+                      "Quarterly Earnings Growth",
+                      "Current Ratio",
+                      "Forward Annual Dividend Yield",
+                      "Trailing Annual Dividend Yield"]
 
         # Secondary Fundamentals
-        secondary_value = [num for num in range(11, 14)]
+        secondary_values = ["Gross Profit",
+                           "EBITDA",
+                           "Net Income Avi to Common"]
 
         # All important Fundamentals:
-        all_value = low_value + high_value + secondary_value
+        all_values = low_values + high_values + secondary_values
 
-        # Primary fundamental statistics in high_value & low_value list.
-        '''
-        low value: Trailing P/E , Forward P/E, PEG, Price/Sales, Price/Book, Total Debt/Equity
-        high value: Profit Margin, Operating Margin, ROA, ROE, Quarterly Rev Growth, Quarterly Earning Growth,
-                    Current Ratio, Forward Annual Div Yield, Trailing Annual Dividend Yield
-        '''
         # Multipliers
         multiplier = {'Trailing P/E': 0,  # 1.3,
                        'Forward P/E': 0,  # 1.1,
@@ -302,36 +308,36 @@ class YFStatistics:
                        'Forward Annual Dividend Yield': 0.4,
                        'Trailing Annual Dividend Yield': 0.6}
 
-        self.target_rows(low_value)
+        self.target_rows(low_values)
 
         # Appending Score to mydict
         for value in self.target_list:
-            scoreboard = ss.rankdata(self.df_downsized.iloc[value, :].astype(float), method='dense')
+            scoreboard = ss.rankdata(self.df_downsized.loc[value, :].astype(float), method='dense')
             # Append to ranking table
-            mydict2[self.df_downsized.index[value]] = scoreboard
-            multiplier_lookup = self.df_downsized.index[value]
+            mydict2[value] = scoreboard
+            multiplier_lookup = value
             for item, num in zip(list(self.df_downsized.columns), range(len(self.df_downsized.columns))):
                 mydict[item] = (mydict[item] + len(self.df_downsized.columns) - scoreboard[num] + 1) * \
                                multiplier[multiplier_lookup]
 
-        self.target_rows(high_value)
+        self.target_rows(high_values)
 
         for value in self.target_list:
-            scoreboard = ss.rankdata(self.df_downsized.iloc[value, :].astype(float), method='dense')
-            mydict2[self.df_downsized.index[value]] = scoreboard
+            scoreboard = ss.rankdata(self.df_downsized.loc[value, :].astype(float), method='dense')
+            mydict2[value] = scoreboard
 
             # invert ranking
-            mydict2[self.df_downsized.index[value]] = len(self.df_downsized.columns) + 1 - mydict2[self.df_downsized.index[value]]
+            mydict2[value] = len(self.df_downsized.columns) + 1 - mydict2[value]
 
-            multiplier_lookup = self.df_downsized.index[value]
+            multiplier_lookup = value
             for item, num in zip(list(self.df_downsized.columns), range(len(self.df_downsized.columns))):
                 mydict[item] = (mydict[item] + scoreboard[num]) * multiplier[multiplier_lookup]
 
         # Secondary fundamentals, check if value positive
-        self.target_rows(secondary_value)
+        self.target_rows(secondary_values)
 
         for value in self.target_list:
-            for item, num in zip(list(self.df_downsized.columns), list(self.df_downsized.iloc[value, :].values)):
+            for item, num in zip(list(self.df_downsized.columns), list(self.df_downsized.loc[value, :].values)):
                 if float(num) >= 0:
                     mydict[item] = mydict[item] + 0.33
                 else:
@@ -350,12 +356,12 @@ class YFStatistics:
                     file.write('Ranking Info' + '\n')
                     self.scoring_df.to_csv(file)
             except IOError:
-                print("Please close your freaking file!!!")
+                print("Please close your file!!!")
 
             with open(self.store_location + self.folder_name + self.separator +
                       'Ranking_information.csv', mode='a') as file:
                 file.write('\n'+'Raw Data' + '\n')
-                self.df_downsized.iloc[all_value, :].to_csv(file, header=True)
+                self.df_downsized.loc[all_values, :].to_csv(file, header=True)
 
         self.scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
 
