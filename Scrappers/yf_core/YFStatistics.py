@@ -25,23 +25,23 @@ class YFStatistics:
 
     def __init__(self, args, store_location="D:\Yahoo Finance\Stock Data\\",
                  folder_name='test_folder', file_save=False):
-        self.args = args
-        self.store_location = store_location
-        self.folder_name = folder_name
-        self.file_save = file_save
-        self.dataframe = None   # Place holder, all stats
-        self.df_downsized = None          # Place holder, downsized df
-        self.target_list = None  # Place holder, row item targets
-        self.short_date = None  # Place holder, short float dates
-        self.scoring_df = None  # Place holder, listing each every single score for each category for all tickers
-        self.scoring_dict = None  # place holder, total score for each ticker stored in dictionary
-        self.ignored_stats = []  # place holder, showing all the stats that were ignored in the calculation
-        self.my_system = sys.platform
+        self._args = args
+        self._store_location = store_location
+        self._folder_name = folder_name
+        self._file_save = file_save
+        self._dataframe = None   # Place holder, all stats
+        self._df_downsized = None          # Place holder, downsized df
+        self._target_list = None  # Place holder, row item targets
+        self._short_date = None  # Place holder, short float dates
+        self._scoring_df = None  # Place holder, listing each every single score for each category for all tickers
+        self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
+        self._ignored_stats = []  # place holder, showing all the stats that were ignored in the calculation
+        self._my_system = sys.platform
 
-        if self.my_system == 'linux' or self.my_system == 'darwin':
-            self.separator = "/"
-        elif self.my_system == 'win32':
-            self.separator = "\\"
+        if self._my_system == 'linux' or self._my_system == 'darwin':
+            self._separator = "/"
+        elif self._my_system == 'win32':
+            self._separator = "\\"
 
     def statistics_scrap(self):
         """
@@ -50,7 +50,7 @@ class YFStatistics:
         scrapping process from Statistics tab on Yahoo Finance.
         Do not pass in any parameter to this Method!!
         """
-        for items in self.args:
+        for items in self._args:
 
             # Parameters used for html classes
             ticker = items
@@ -145,30 +145,33 @@ class YFStatistics:
                                 val[index] = str(float(val[index].replace(',', ''))/100)
 
             # test to see if dataframe dict exists, if it doesn't create dictionary, else append.
-            if isinstance(None, type(self.dataframe)):
-                self.dataframe = pd.DataFrame(val, col, columns=[ticker])
+            if isinstance(None, type(self._dataframe)):
+                self._dataframe = pd.DataFrame(val, col, columns=[ticker])
             else:
-                self.dataframe[ticker] = val
+                self._dataframe[ticker] = val
 
         # Check if User wants to save result to the hard drive
-        if self.file_save:
+        if self._file_save:
             try:
                 # if path doesn't exist, create
-                if not os.path.exists(self.store_location + self.folder_name):
-                    os.makedirs(self.store_location + self.folder_name)
+                if not os.path.exists(self._store_location + self._folder_name):
+                    os.makedirs(self._store_location + self._folder_name)
 
-                self.dataframe.to_csv(self.store_location + self.folder_name +
-                                      self.separator + 'Statistics_data.csv')
+                self._dataframe.to_csv(self._store_location + self._folder_name +
+                                       self._separator + 'Statistics_data.csv')
             except IOError:
                 print("Please close your file!!!")
 
         # populating self.short_date list to be used in downsize method
-        self.short_date = []
+        self._short_date = []
 
         for x, y in zip([44, 45, 48], [13, 12, 13]):
-            self.short_date.append(list(self.dataframe.index)[x][y:])
+            self._short_date.append(list(self._dataframe.index)[x][y:])
 
-    def downsize(self):
+        self.__downsize()
+        self.__scoring()
+
+    def __downsize(self):
         """
 
         This is a method used within the StatisticsScrap Class
@@ -208,29 +211,29 @@ class YFStatistics:
                           'Avg Vol (3 month)',
                           'Avg Vol (10 day)',
                           'Shares Outstanding',
-                          'Shares Short ' + self.short_date[0],
-                          'Short Ratio ' + self.short_date[1],
-                          'Shares Short ' + self.short_date[2],
+                          'Shares Short ' + self._short_date[0],
+                          'Short Ratio ' + self._short_date[1],
+                          'Shares Short ' + self._short_date[2],
                           'Forward Annual Dividend Yield',
                           'Trailing Annual Dividend Yield',
                           "Payout Ratio"
                           ]
 
         # filtering dataframe to find the indices of only the important rows.
-        mylist = list(filter(lambda x: x in important_item, self.dataframe.index))
-        mylist = list(map(lambda x: list(self.dataframe.index).index(x), mylist))
+        mylist = list(filter(lambda x: x in important_item, self._dataframe.index))
+        mylist = list(map(lambda x: list(self._dataframe.index).index(x), mylist))
 
         # load data from self.dataframe to self.df to be exported where the fundamental deemed as important
-        self.df_downsized = self.dataframe.iloc[mylist, :]
+        self._df_downsized = self._dataframe.iloc[mylist, :]
 
         # Check if the User wants to save the result to the hard drive
-        if self.file_save:
+        if self._file_save:
             try:
-                self.df_downsized.to_csv(self.store_location + self.folder_name + self.separator + 'Statistics_data_abstract.csv')
+                self._df_downsized.to_csv(self._store_location + self._folder_name + self._separator + 'Statistics_data_abstract.csv')
             except IOError:
                 print('Close your file!!!')
 
-    def target_rows(self, value_list):
+    def __target_rows(self, value_list):
         """
         :param value_list<String>[]:
         :return: None
@@ -241,20 +244,20 @@ class YFStatistics:
         Updates self.target_list during every call
         """
 
-        na_list = list(filter(lambda x: 'N/A' in list(self.df_downsized.loc[x, :].values), value_list))
+        na_list = list(filter(lambda x: 'N/A' in list(self._df_downsized.loc[x, :].values), value_list))
 
-        self.target_list = list(filter(lambda x: x not in na_list, value_list))
+        self._target_list = list(filter(lambda x: x not in na_list, value_list))
 
-        self.ignored_stats.extend(na_list)
+        self._ignored_stats.extend(na_list)
 
-    def scoring(self):
+    def __scoring(self):
         """
         This method returns the final score for each stock based on
         ranking of stocks in each of the categories
         """
 
         # Stock tickers
-        stocks = list(self.df_downsized.columns)
+        stocks = list(self._df_downsized.columns)
 
         # create scorecard, initialize
         mydict = OrderedDict()
@@ -308,62 +311,62 @@ class YFStatistics:
                        'Forward Annual Dividend Yield': 0.4,
                        'Trailing Annual Dividend Yield': 0.6}
 
-        self.target_rows(low_values)
+        self.__target_rows(low_values)
 
         # Appending Score to mydict
-        for value in self.target_list:
-            scoreboard = ss.rankdata(self.df_downsized.loc[value, :].astype(float), method='dense')
+        for value in self._target_list:
+            scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
             # Append to ranking table
             mydict2[value] = scoreboard
             multiplier_lookup = value
-            for item, num in zip(list(self.df_downsized.columns), range(len(self.df_downsized.columns))):
-                mydict[item] = (mydict[item] + len(self.df_downsized.columns) - scoreboard[num] + 1) * \
+            for item, num in zip(list(self._df_downsized.columns), range(len(self._df_downsized.columns))):
+                mydict[item] = (mydict[item] + len(self._df_downsized.columns) - scoreboard[num] + 1) * \
                                multiplier[multiplier_lookup]
 
-        self.target_rows(high_values)
+        self.__target_rows(high_values)
 
-        for value in self.target_list:
-            scoreboard = ss.rankdata(self.df_downsized.loc[value, :].astype(float), method='dense')
+        for value in self._target_list:
+            scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
             mydict2[value] = scoreboard
 
             # invert ranking
-            mydict2[value] = len(self.df_downsized.columns) + 1 - mydict2[value]
+            mydict2[value] = len(self._df_downsized.columns) + 1 - mydict2[value]
 
             multiplier_lookup = value
-            for item, num in zip(list(self.df_downsized.columns), range(len(self.df_downsized.columns))):
+            for item, num in zip(list(self._df_downsized.columns), range(len(self._df_downsized.columns))):
                 mydict[item] = (mydict[item] + scoreboard[num]) * multiplier[multiplier_lookup]
 
         # Secondary fundamentals, check if value positive
-        self.target_rows(secondary_values)
+        self.__target_rows(secondary_values)
 
-        for value in self.target_list:
-            for item, num in zip(list(self.df_downsized.columns), list(self.df_downsized.loc[value, :].values)):
+        for value in self._target_list:
+            for item, num in zip(list(self._df_downsized.columns), list(self._df_downsized.loc[value, :].values)):
                 if float(num) >= 0:
                     mydict[item] = mydict[item] + 0.33
                 else:
                     mydict[item] = mydict[item] - 0.25
 
-        self.scoring_df = pd.DataFrame(mydict2, index=self.df_downsized.columns).transpose()
+        self._scoring_df = pd.DataFrame(mydict2, index=self._df_downsized.columns).transpose()
 
-        if self.file_save:
+        if self._file_save:
             try:
                 # if path doesn't exist, create
-                if not os.path.exists(self.store_location + self.folder_name):
-                    os.makedirs(self.store_location + self.folder_name)
+                if not os.path.exists(self._store_location + self._folder_name):
+                    os.makedirs(self._store_location + self._folder_name)
 
-                with open(self.store_location + self.folder_name + self.separator +
+                with open(self._store_location + self._folder_name + self._separator +
                           'Ranking_information.csv', mode='w') as file:
                     file.write('Ranking Info' + '\n')
-                    self.scoring_df.to_csv(file)
+                    self._scoring_df.to_csv(file)
             except IOError:
                 print("Please close your file!!!")
 
-            with open(self.store_location + self.folder_name + self.separator +
+            with open(self._store_location + self._folder_name + self._separator +
                       'Ranking_information.csv', mode='a') as file:
                 file.write('\n'+'Raw Data' + '\n')
-                self.df_downsized.loc[all_values, :].to_csv(file, header=True)
+                self._df_downsized.loc[all_values, :].to_csv(file, header=True)
 
-        self.scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
+        self._scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
 
 
 if __name__ == "__main__":
@@ -384,6 +387,3 @@ if __name__ == "__main__":
     myclass = YFStatistics(user_input, store_location=store_location, folder_name='test',
                            file_save=False)
     myclass.statistics_scrap()
-    myclass.downsize()
-    myclass.scoring()
-

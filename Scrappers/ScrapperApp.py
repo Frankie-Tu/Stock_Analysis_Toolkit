@@ -34,12 +34,10 @@ class ScrapperApp:
         myclass = yf.YFStatistics(self.stock_ticker_list, store_location=self.storelocation,
                                   folder_name=self.foldername, file_save=self.filesave)
         myclass.statistics_scrap()
-        myclass.downsize()
-        myclass.scoring()
-        trailing_pe_list = myclass.df_downsized.iloc[0, :]
+        trailing_pe_list = myclass._df_downsized.iloc[0, :]
         implied_peg = OrderedDict()
-        self.ranking = myclass.scoring_df
-        self.score = myclass.scoring_dict
+        self.ranking = myclass._scoring_df
+        self.score = myclass._scoring_dict
 
         myclass2 = yfs.YFSummary(self.stock_ticker_list, store_location=self.storelocation,
                                  folder_name=self.foldername, filesave=self.filesave)
@@ -79,8 +77,8 @@ class ScrapperApp:
                          '  Price Percentile: ' +
                          str(myclass2.dataframe.iloc[5:7, :].iloc[1, col]) + '\n')
 
-        if myclass.ignored_stats:
-            for item in myclass.ignored_stats:
+        if myclass._ignored_stats:
+            for item in myclass._ignored_stats:
                 ignored_item_string += item + ', \n'
 
             ignored_item_string += ' has been ignored from the calculation of scores! \n' + ''
@@ -126,5 +124,5 @@ if __name__ == '__main__':
         store_location = "D:\Yahoo Finance\Stock Data\\"
 
     mymain = ScrapperApp(user_input, foldername='Retail', comprehensive=True,
-                         filesave=True, storelocation=store_location)
+                         filesave=False, storelocation=store_location)
     mymain.scrapper_start()
