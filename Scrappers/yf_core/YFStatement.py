@@ -26,8 +26,8 @@ class YFStatement:
     def __init__(self, ticker, store_location, folder_name, file_save):
         self.ticker = ticker
         self.store_location = store_location
-        self.foldername = folder_name
-        self.filesave = file_save
+        self.folder_name = folder_name
+        self.file_save = file_save
         self.statement_type = {'IS': 'financials',
                                'BS': 'balance-sheet',
                                'CF': 'cash-flow'}
@@ -50,6 +50,13 @@ class YFStatement:
             'Income Statement', \n
             'Cash Flow'
         """
+        # converts "-" to 0 and str to float, eg '123,456.789' to '123456.789'
+        def convert(value2):
+            if value2 == '-':
+                return 0
+            else:
+                return float(value2.replace(',', ''))
+
         self.statement = statement.upper()
         url = "https://ca.finance.yahoo.com/quote/" + self.ticker + \
               "/" + self.statement_type[statement.upper()] + "?p=" + self.ticker
@@ -66,35 +73,19 @@ class YFStatement:
         td_list = [tr.find_all("td")for tr in all_html]
 
         # Date extraction
-        date_list = [date.text for date in td_list[0]][1:]
+        date_list = [date.text for date in td_list[0][1:]]
 
         # Grab item name and its corresponding values from each year and assign into Ordered Dictionary
         item_dict = OrderedDict()
         for td in td_list[1:]:
-            item1 = td[0].text
-            item_dict[item1] = [item2.text for item2 in td[1:]]
+            item_dict[td[0].text] = list(map(lambda x: x.text, td[1:]))
 
-        # # Excluding those heading when searching in the item_dict
-
-        row_names = []
-
-        # Values from the income Statement
+        # data cleaning
+        row_names = list(filter(lambda x: item_dict[x], item_dict.keys()))
         result_list = []
 
-        for item in item_dict.keys():
-            # Skips headings, item_dict[headings] is empty
-            if item_dict[item]:
-                # Data Cleaning, converting any '-' in list item_dict[item] to 0
-                # Take out ',' and convert str to float
-                for value in item_dict[item]:
-                    if value == '-':
-                        item_dict[item][item_dict[item].index(value)] = 0
-                    else:
-                        indexnum = item_dict[item].index(value)
-                        item_dict[item][indexnum] = float(item_dict[item][indexnum].replace(',', ''))
-
-                result_list.append(item_dict[item])
-                row_names.append(item)
+        for item in row_names:
+            result_list.append(list(map(lambda x: convert(x), item_dict[item])))
 
         self.raw_data = pd.DataFrame(result_list, index=row_names, columns=date_list)
 
@@ -155,18 +146,18 @@ class YFStatement:
 
         self.statement_growth = pd.DataFrame(percentage_list_result, index=itemname_list, columns=dates)
 
-        if self.filesave:
+        if self.file_save:
             try:
-                if not os.path.exists(self.store_location + self.foldername + self.separator + self.statement):
-                    os.makedirs(self.store_location + self.foldername + self.separator + self.statement)
+                if not os.path.exists(self.store_location + self.folder_name + self.separator + self.statement):
+                    os.makedirs(self.store_location + self.folder_name + self.separator + self.statement)
 
-                with open(self.store_location + self.foldername + self.separator + self.statement +
+                with open(self.store_location + self.folder_name + self.separator + self.statement +
                           self.separator + self.statement + '_G_' +
                           self.ticker + '.csv', mode='w') as file:
                     file.write(self.statement + '\n')
                     self.raw_data.to_csv(file)
 
-                with open(self.store_location + self.foldername + self.separator + self.statement +
+                with open(self.store_location + self.folder_name + self.separator + self.statement +
                           self.separator + self.statement + '_G_' +
                           self.ticker + '.csv', mode='a') as file:
                     file.write("%" + "\n")
