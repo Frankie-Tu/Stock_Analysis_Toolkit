@@ -11,26 +11,25 @@ import getpass
 
 class YFStatistics:
     """
-    Note: Scraps data from Statistics Tab
-
-    Please input a list array of stock tickers you wish to scrap.
+    Scraps data from Statistics Tab.
+    Please input a list of stock tickers you wish to scrap.
     This Class scraps data off Yahoo Finance for the
     tickers selected.
 
-    @:param: Storelocation, foldername, filesave are not optional arguments \n
-    storelocation example: F:\\\Yahoo Finance\\\Stock Data\\\ \\\ \n
-    foldername: type = str \n
-    filesave: type = boolean
+    :param args: list[String] => list of ticker names
+    :param store_location: String => root directory on hard drive to save output
+    :param folder_name: String => folder name to be created in the directory of store_location
+    :param file_save: Boolean => whether to save the output
+
     """
 
-    def __init__(self, args, store_location="D:\Yahoo Finance\Stock Data\\",
-                 folder_name='test_folder', file_save=False):
+    def __init__(self, args, store_location, folder_name='test_folder', file_save=False):
         self._args = args
         self._store_location = store_location
         self._folder_name = folder_name
         self._file_save = file_save
         self._dataframe = None   # Place holder, all stats
-        self._df_downsized = None          # Place holder, downsized df
+        self._df_downsized = None # Place holder, downsized df
         self._target_list = None  # Place holder, row item targets
         self._short_date = None  # Place holder, short float dates
         self._scoring_df = None  # Place holder, listing each every single score for each category for all tickers
@@ -45,10 +44,10 @@ class YFStatistics:
 
     def statistics_scrap(self):
         """
-        Note:
-        This method is used by StatisticsScrap Class to start the web
+        Method is used by StatisticsScrap Class to start the web
         scrapping process from Statistics tab on Yahoo Finance.
-        Do not pass in any parameter to this Method!!
+
+        :return: None
         """
         for items in self._args:
 
@@ -67,11 +66,11 @@ class YFStatistics:
 
             def iteration_function(data):
                 """
+                This is a nested function that iterates through <td> within <tr>.
+                Used only within statistics_scrap method to populate result_dict OrderedDict
+
                 :param data: html data
                 :return: None
-
-                This is a local function that iterates through <td> within <tr>.
-                Used only within statistics_scrap method to populate result_dict OrderedDict
                 """
 
                 # Temporary list
@@ -175,11 +174,13 @@ class YFStatistics:
 
     def __downsize(self):
         """
-        This is a method used within the StatisticsScrap Class
+        Method used within the StatisticsScrap Class
         with no additional parameters required.
 
         Purpose: This downsize the data set to more important
         fundamentals and save as abstract-data.csv
+
+        :return: None
         """
         # Class Attributes that are important to keep
         important_item = ['Trailing P/E',
@@ -236,13 +237,13 @@ class YFStatistics:
 
     def __target_rows(self, value_list):
         """
-        :param value_list: list[String] => list of column names being targeted
-        :return: None
-
-        Note: This method is not meant to be called directly by the user.
-        By default, this method is called within method scoring(self)
+        Method is not meant to be called directly by the user.
+        By default, this method is called by method scoring(self)
 
         Updates self.target_list during every call
+
+        :param value_list: list[String] => list of column names being targeted
+        :return: None
         """
 
         na_list = list(filter(lambda x: 'N/A' in list(self._df_downsized.loc[x, :].values), value_list))
