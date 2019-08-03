@@ -67,7 +67,9 @@ class YFStatistics:
 
             def iteration_function(data):
                 """
-                :param html data:
+                :param data: html data
+                :return: None
+
                 This is a local function that iterates through <td> within <tr>.
                 Used only within statistics_scrap method to populate result_dict OrderedDict
                 """
@@ -173,7 +175,6 @@ class YFStatistics:
 
     def __downsize(self):
         """
-
         This is a method used within the StatisticsScrap Class
         with no additional parameters required.
 
@@ -235,7 +236,7 @@ class YFStatistics:
 
     def __target_rows(self, value_list):
         """
-        :param value_list<String>[]:
+        :param value_list: list[String] => list of column names being targeted
         :return: None
 
         Note: This method is not meant to be called directly by the user.

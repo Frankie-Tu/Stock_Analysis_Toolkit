@@ -94,9 +94,8 @@ class YFStatement:
         Note: \n
             help calculating yoy growth for each item on the statement
             Only call this function after the downloader method has already been called
-            Dataframe_in: pandas.dataframe
         """
-        itemname_list = list(self.raw_data.index)
+        item_name_list = list(self.raw_data.index)
         percentage_list_result = []
 
         for r in range(self.raw_data.shape[0]):
@@ -144,7 +143,7 @@ class YFStatement:
         dates = list(self.raw_data.columns)[2::-1]
         dates.append('CAGR')
 
-        self.statement_growth = pd.DataFrame(percentage_list_result, index=itemname_list, columns=dates)
+        self.statement_growth = pd.DataFrame(percentage_list_result, index=item_name_list, columns=dates)
 
         if self.file_save:
             try:
@@ -164,7 +163,7 @@ class YFStatement:
                     self.statement_growth.to_csv(file)
 
             except IOError:
-                print("Please close your freaking file!!!")
+                print("Please close your file!!!")
 
 
 def statements(arg, store_location,
