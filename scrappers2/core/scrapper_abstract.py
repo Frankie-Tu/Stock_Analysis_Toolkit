@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup as Soup
-from collections import OrderedDict
-import pandas as pd
+
 import os
 import scipy.stats as ss
 import pdb
@@ -18,8 +17,8 @@ class ScrapperAbstract(ABC):
     :param file_save: Boolean => whether to save the output
     """
 
-    def __init__(self, args, store_location, folder_name='test_folder', file_save=False):
-        self._args = args
+    def __init__(self, tickers, store_location, folder_name='test_folder', file_save=False):
+        self._tickers = tickers
         self._store_location = store_location
         self._folder_name = folder_name
         self._file_save = file_save
@@ -42,12 +41,29 @@ class ScrapperAbstract(ABC):
 
         return Soup(r.text, 'html.parser')
 
+    def csv_writer(self, main_dir, sub, dataframe_):
+        """
+        Used to write dataframe to csv file on hard drive
+
+        :param main_dir: root directory
+        :param sub: sub structure, or file name
+        :param dataframe_: dataframe to be written to hard drive
+        :return: None
+        """
+
+        try:
+            # if path doesn't exist, create
+            if not os.path.exists(main_dir):
+                os.makedirs(main_dir)
+
+            dataframe_.to_csv(main_dir + self._separator + sub)
+        except IOError:
+            print("Please close your file!!!")
+
     @abstractmethod
     def data_parser(self):
         pass
 
-    @abstractmethod
-    def csv_writer(self):
-        pass
+
 
 

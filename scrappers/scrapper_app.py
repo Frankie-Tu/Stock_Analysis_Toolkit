@@ -1,6 +1,6 @@
-from Scrappers.yf_core import YFStatistics as yf
-from Scrappers.yf_core import YFSummary as yfs
-from Scrappers.yf_core import YFStatement as yfst
+from scrappers.yf_core import yf_statistics as yf
+from scrappers.yf_core import yf_summary as yfs
+from scrappers.yf_core import yf_statement as yfst
 from collections import OrderedDict
 import pandas
 import pdb
