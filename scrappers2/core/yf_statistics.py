@@ -1,7 +1,9 @@
-from scrappers2.Core.scrapper_abstract import ScrapperAbstract
+from scrappers2.core.scrapper_abstract import ScrapperAbstract
 
 from collections import OrderedDict
 import pandas as pd
+import scipy.stats as ss
+import pdb
 
 
 class YFStatistics(ScrapperAbstract):
@@ -66,35 +68,40 @@ class YFStatistics(ScrapperAbstract):
             # result dictionary initialize:
             result_dict = OrderedDict()
 
-            # fetch data
-            print("Sending requests for " + ticker + '...')
-            all_html = self.requester(url).find_all('div', {'class': statistics_class})[0]
+            try:
+                # fetch data
+                self._logger.info("Sending requests for {}...".format(ticker))
+                all_html = self.requester(url).find_all('div', {'class': statistics_class})[0]
 
-            # Valuation Measures:
-            print('Computing Valuation Measures...')
-            valuation_measures = all_html \
-                .find_all('div', {'class': statistics_section_class_val_measure})[0] \
-                .find_all("tr")
+                # Valuation Measures:
+                self._logger.info("{}: Computing Valuation Measures...".format(ticker))
+                valuation_measures = all_html \
+                    .find_all('div', {'class': statistics_section_class_val_measure})[0] \
+                    .find_all("tr")
 
-            for item, num in zip(valuation_measures, valuation_measures):
-                result_dict[item.span.text] = num \
-                    .find_all('td', {'class': td_class})[0].text
+                for item, num in zip(valuation_measures, valuation_measures):
+                    result_dict[item.span.text] = num \
+                        .find_all('td', {'class': td_class})[0].text
 
-            # Financial Highlights:
-            print("Computing Financial Highlights...")
-            financial_highlights = all_html \
-                .find_all('div', {'class': statistics_section_class})[0] \
-                .find_all('table', {'class': table_class})
+                # Financial Highlights:
+                self._logger.info("{}: Computing Financial Highlights...".format(ticker))
+                financial_highlights = all_html \
+                    .find_all('div', {'class': statistics_section_class})[0] \
+                    .find_all('table', {'class': table_class})
 
-            iteration_function(financial_highlights)
+                iteration_function(financial_highlights)
 
-            # Trading Information:
-            print("Computing Trading Information...")
-            trading_information = all_html \
-                .find_all('div', {'class': statistics_section_class2})[0] \
-                .find_all('table', {'class': table_class})
+                # Trading Information:
+                self._logger.info("{}: Computing Trading Information...".format(ticker))
+                trading_information = all_html \
+                    .find_all('div', {'class': statistics_section_class2})[0] \
+                    .find_all('table', {'class': table_class})
 
-            iteration_function(trading_information)
+                iteration_function(trading_information)
+
+            except IndexError:
+                self._logger.exception("{}: returned html not in expected format".format(ticker))
+                raise IndexError
 
             # Temp list
             col = []
@@ -105,7 +112,7 @@ class YFStatistics(ScrapperAbstract):
                 col.append(colnames)
                 val.append(value)
 
-            print("Converting values...")
+            self._logger.info("{}: Converting string to numeric values...".format(ticker))
             # Convert all numbers to base of 1, 1M = 1,000,000, 1k = 1,000, 5% = 0.05
             for item in result_dict.values():
 
@@ -132,10 +139,197 @@ class YFStatistics(ScrapperAbstract):
 
             # write to csv if requested
             if self._file_save:
-                self.csv_writer(self._store_location + self._folder_name, "Statistics_data.csv", self._dataframe)
+                self.csv_writer(self._store_location, self._folder_name, "Statistics_data.csv", self._dataframe)
 
             # populating self.short_date list to be used in downsize method
             self._short_date = []
 
             for x, y in zip([44, 45, 48], [13, 12, 13]):
                 self._short_date.append(list(self._dataframe.index)[x][y:])
+
+            self.__downsize()
+            self.__scoring()
+
+    def __downsize(self):
+        """
+        Method used within the YFStatistics Class.
+
+        Purpose: This downsize the dataset to more important
+        fundamentals and save as abstract-data.csv
+
+        :return: None
+        """
+        # Class Attributes that are important to keep
+        important_item = ['Trailing P/E',
+                          'Forward P/E',
+                          'PEG Ratio (5 yr expected)',
+                          'Price/Sales',
+                          'Price/Book',
+                          'Profit Margin',
+                          'Operating Margin',
+                          'Return on Assets',
+                          'Return on Equity',
+                          'Revenue Per Share',
+                          'Quarterly Revenue Growth',
+                          'Gross Profit',
+                          'EBITDA',
+                          'Net Income Avi to Common',
+                          'Quarterly Earnings Growth',
+                          'Total Cash Per Share',
+                          'Total Debt/Equity',
+                          'Current Ratio',
+                          'Operating Cash Flow',
+                          'Levered Free Cash Flow',
+                          'Beta (3Y Monthly)',
+                          '52-Week Change',
+                          'S&P500 52-Week Change',
+                          '52 Week High',
+                          '52 Week Low',
+                          '50-Day Moving Average',
+                          '200-Day Moving Average',
+                          'Avg Vol (3 month)',
+                          'Avg Vol (10 day)',
+                          'Shares Outstanding',
+                          'Shares Short ' + self._short_date[0],
+                          'Short Ratio ' + self._short_date[1],
+                          'Shares Short ' + self._short_date[2],
+                          'Forward Annual Dividend Yield',
+                          'Trailing Annual Dividend Yield',
+                          "Payout Ratio"
+                          ]
+
+        # filtering dataframe to find the indices of only the important rows.
+        mylist = list(filter(lambda x: x in important_item, self._dataframe.index))
+        mylist = list(map(lambda x: list(self._dataframe.index).index(x), mylist))
+
+        # load data from self.dataframe to self.df to be exported where the fundamental deemed as important
+        self._df_downsized = self._dataframe.iloc[mylist, :]
+
+        # write to csv if requested
+        if self._file_save:
+            self.csv_writer(self._store_location, self._folder_name, "Statistics_data_abstract.csv", self._df_downsized)
+
+    def __target_rows(self, value_list):
+        """
+        Method is not meant to be called directly by the user.
+        By default, this method is called by method scoring(self)
+
+        Updates self.target_list during every call
+
+        :param value_list: list[String] => list of column names being targeted
+        :return: None
+        """
+
+        na_list = list(filter(lambda x: 'N/A' in list(self._df_downsized.loc[x, :].values), value_list))
+
+        self._target_list = list(filter(lambda x: x not in na_list, value_list))
+
+        self._ignored_stats.extend(na_list)
+
+    def __scoring(self):
+        """
+        This method returns the final score for each stock based on
+        ranking of stocks in each of the categories
+        """
+
+        # create scorecard, initialize
+        mydict = OrderedDict()
+
+        for item in self._tickers:
+            mydict[item] = 0
+
+        mydict2 = OrderedDict()
+
+        # all values lower the better
+        low_values = ["Trailing P/E",
+                     "Forward P/E",
+                     "PEG Ratio (5 yr expected)",
+                     "Price/Sales",
+                     "Price/Book",
+                     "Total Debt/Equity"]
+
+        # all values higher the better
+        high_values = ["Profit Margin",
+                      "Operating Margin",
+                      "Return on Assets",
+                      "Return on Equity",
+                      "Quarterly Revenue Growth",
+                      "Quarterly Earnings Growth",
+                      "Current Ratio",
+                      "Forward Annual Dividend Yield",
+                      "Trailing Annual Dividend Yield"]
+
+        # Secondary Fundamentals
+        secondary_values = ["Gross Profit",
+                           "EBITDA",
+                           "Net Income Avi to Common"]
+
+        # All important Fundamentals:
+        all_values = low_values + high_values + secondary_values
+
+        # Multipliers
+        multiplier = {'Trailing P/E': 0,  # 1.3,
+                       'Forward P/E': 0,  # 1.1,
+                       'PEG Ratio (5 yr expected)': 0,  #1,
+                       'Price/Sales': 0.5,
+                       'Price/Book': 0.5,
+                       'Profit Margin': 1.2,
+                       'Operating Margin': 1.2,
+                       'Return on Assets': 1,
+                       'Return on Equity': 1.1,
+                       'Quarterly Revenue Growth': 0.8,
+                       'Quarterly Earnings Growth': 1,
+                       'Total Debt/Equity': 1.2,
+                       'Current Ratio': 1.1,
+                       'Forward Annual Dividend Yield': 0.4,
+                       'Trailing Annual Dividend Yield': 0.6}
+
+        self.__target_rows(low_values)
+
+        # Appending Score to mydict
+        for value in self._target_list:
+            scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
+            # Append to ranking table
+            mydict2[value] = scoreboard
+            multiplier_lookup = value
+            for item, num in zip(list(self._df_downsized.columns), range(len(self._df_downsized.columns))):
+                mydict[item] = (mydict[item] + len(self._df_downsized.columns) - scoreboard[num] + 1) * \
+                               multiplier[multiplier_lookup]
+
+        self.__target_rows(high_values)
+
+        for value in self._target_list:
+            scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
+            mydict2[value] = scoreboard
+
+            # invert ranking
+            mydict2[value] = len(self._df_downsized.columns) + 1 - mydict2[value]
+
+            multiplier_lookup = value
+            for item, num in zip(list(self._df_downsized.columns), range(len(self._df_downsized.columns))):
+                mydict[item] = (mydict[item] + scoreboard[num]) * multiplier[multiplier_lookup]
+
+        # Secondary fundamentals, check if value positive
+        self.__target_rows(secondary_values)
+
+        for value in self._target_list:
+            for item, num in zip(list(self._df_downsized.columns), list(self._df_downsized.loc[value, :].values)):
+                if float(num) >= 0:
+                    mydict[item] = mydict[item] + 0.33
+                else:
+                    mydict[item] = mydict[item] - 0.25
+
+        self._scoring_df = pd.DataFrame(mydict2, index=self._df_downsized.columns).transpose()
+
+        if self._file_save:
+            self.csv_writer(self._store_location, self._folder_name, "Ranking_information.csv", self._scoring_df,
+                            self._df_downsized.loc[all_values, :])
+        self._scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
+
+
+if __name__ == "__main__":
+    user_input = input("Please select the ticker you wish you analyze: ")
+    user_input = user_input.replace(' ', '').split(sep=',')
+
+    YFStatistics(user_input, store_location="/home/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
+                 file_save=True).data_parser()

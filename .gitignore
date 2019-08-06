@@ -7,3 +7,4 @@ Stock Data/
 venv/
 Main*
 .vscode/
+**.csv
