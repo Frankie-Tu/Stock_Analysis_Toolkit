@@ -2,10 +2,6 @@ import requests
 from bs4 import BeautifulSoup as Soup
 
 import os
-import scipy.stats as ss
-import pdb
-import sys
-import getpass
 from abc import ABC, abstractmethod
 from scrappers2.utils.logger import Logger
 from scrappers2.utils.system_spec import SystemSpec
@@ -61,14 +57,14 @@ class ScrapperAbstract(ABC):
 
         if len(dataframes) == 0:
             try:
-                self._logger.info("Writing dataframe to path {}".format(full_path + self._separator + file_name))
+                self._logger.info("Saving dataframe to path {}".format(full_path + self._separator + file_name))
                 dataframe_.to_csv(full_path + self._separator + file_name)
             except IOError:
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))
         else: # multiple dfs passed in, appending mode
             try:
                 with open(full_path + self._separator + file_name, mode='w') as file:
-                    self._logger.info("Writing dataframe to path {}".format(full_path + self._separator + file_name))
+                    self._logger.info("Saving dataframe to path {}".format(full_path + self._separator + file_name))
                     file.write('Ranking Info' + '\n')
                     dataframe_.to_csv(file)
 
@@ -82,9 +78,12 @@ class ScrapperAbstract(ABC):
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))
 
     @abstractmethod
-    def data_parser(self):
+    def data_parser(self, ticker):
         pass
 
+    @abstractmethod
+    def run(self):
+        pass
 
 
 

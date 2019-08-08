@@ -1,6 +1,6 @@
 import logging
 import sys
-from datetime import date
+from time import strftime
 from scrappers2.utils.system_spec import SystemSpec
 import os
 
@@ -9,7 +9,6 @@ class Logger:
 
     def __init__(self, name, log_level=logging.INFO, log_format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", file_mode='w'):
         self.name = name
-        #self.file_name = file_name
         self.log_level = log_level
         self.log_format = log_format
         self.file_mode = file_mode
@@ -30,7 +29,7 @@ class Logger:
             os.makedirs(log_dir)
 
         log_file = log_dir + self.separator + \
-                   "ScrapperApp_{}.log".format(date.today())
+                   "ScrapperApp_{}.log".format(strftime("%Y-%m-%d %H:%M:%S"))
 
         logging.basicConfig(filename=log_file,
                             level=self.log_level,

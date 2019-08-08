@@ -1,8 +1,11 @@
 from scrappers2.core.scrapper_abstract import ScrapperAbstract
+from scrappers2.utils.multi_threader import MultiThreader
 
 from collections import OrderedDict
 import pandas as pd
 import scipy.stats as ss
+from threading import Lock
+import time
 import pdb
 
 
@@ -28,21 +31,25 @@ class YFStatistics(ScrapperAbstract):
         self._scoring_df = None  # Place holder, listing each every single score for each category for all tickers
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
         self._ignored_stats = []  # place holder, showing all the stats that were ignored in the calculation
+        self._result_dict = OrderedDict()
+        self._lock = Lock()
 
-    def data_parser(self):
+    def data_parser(self, ticker):
         """
         Method is used by YFStatistics Class to parse html
-        data from Statistics tab on Yahoo Finance.
+        data from Statistics tab on Yahoo Finance. Supports multi-threaded operation
 
+        :param ticker: stock ticker symbol
         :return: None
         """
 
-        def iteration_function(data):
+        def iteration_function(data, class_name):
             """
             This is a nested function that iterates through <td> within <tr>.
             Used only within YFStatistics.data_parser method to populate result_dict OrderedDict
 
             :param data: html data
+            :param class_name: html class
             :return: None
             """
 
@@ -53,102 +60,108 @@ class YFStatistics(ScrapperAbstract):
 
             # Dumping results into result dictionary. Both key and value.
             for item, num in zip(mylist, mylist):
-                result_dict[item.span.text] = num.find_all('td', {'class': td_class})[0].text
+                self._result_dict[item.span.text] = num.find_all('td', {'class': class_name})[0].text
 
-        for ticker in self._tickers:
+        url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
+        statistics_class = 'Mstart(a) Mend(a)'
+        statistics_section_class = 'Mb(10px) Pend(20px) smartphone_Pend(0px)'
+        statistics_section_class_val_measure = "Mb(10px) smartphone_Pend(0px) Pend(20px)"
+        statistics_section_class2 = 'Pstart(20px) smartphone_Pstart(0px)'
+        td_class = 'Fz(s) Fw(500) Ta(end) Pstart(10px) Miw(60px)'
+        table_class = 'table-qsp-stats Mt(10px)'
 
-            url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
-            statistics_class = 'Mstart(a) Mend(a)'
-            statistics_section_class = 'Mb(10px) Pend(20px) smartphone_Pend(0px)'
-            statistics_section_class_val_measure = "Mb(10px) smartphone_Pend(0px) Pend(20px)"
-            statistics_section_class2 = 'Pstart(20px) smartphone_Pstart(0px)'
-            td_class = 'Fz(s) Fw(500) Ta(end) Pstart(10px) Miw(60px)'
-            table_class = 'table-qsp-stats Mt(10px)'
+        try:
+            # fetch data
+            self._logger.info("Sending requests for {}...".format(ticker))
+            all_html = self.requester(url).find_all('div', {'class': statistics_class})[0]
 
-            # result dictionary initialize:
-            result_dict = OrderedDict()
+            # Valuation Measures:
+            self._logger.info("{}: Computing Valuation Measures...".format(ticker))
+            valuation_measures = all_html \
+                .find_all('div', {'class': statistics_section_class_val_measure})[0] \
+                .find_all("tr")
 
-            try:
-                # fetch data
-                self._logger.info("Sending requests for {}...".format(ticker))
-                all_html = self.requester(url).find_all('div', {'class': statistics_class})[0]
+            for item, num in zip(valuation_measures, valuation_measures):
+                self._result_dict[item.span.text] = num \
+                    .find_all('td', {'class': td_class})[0].text
 
-                # Valuation Measures:
-                self._logger.info("{}: Computing Valuation Measures...".format(ticker))
-                valuation_measures = all_html \
-                    .find_all('div', {'class': statistics_section_class_val_measure})[0] \
-                    .find_all("tr")
+            # Financial Highlights:
+            self._logger.info("{}: Computing Financial Highlights...".format(ticker))
+            financial_highlights = all_html \
+                .find_all('div', {'class': statistics_section_class})[0] \
+                .find_all('table', {'class': table_class})
 
-                for item, num in zip(valuation_measures, valuation_measures):
-                    result_dict[item.span.text] = num \
-                        .find_all('td', {'class': td_class})[0].text
+            iteration_function(financial_highlights, td_class)
 
-                # Financial Highlights:
-                self._logger.info("{}: Computing Financial Highlights...".format(ticker))
-                financial_highlights = all_html \
-                    .find_all('div', {'class': statistics_section_class})[0] \
-                    .find_all('table', {'class': table_class})
+            # Trading Information:
+            self._logger.info("{}: Computing Trading Information...".format(ticker))
+            trading_information = all_html \
+                .find_all('div', {'class': statistics_section_class2})[0] \
+                .find_all('table', {'class': table_class})
 
-                iteration_function(financial_highlights)
+            iteration_function(trading_information, td_class)
 
-                # Trading Information:
-                self._logger.info("{}: Computing Trading Information...".format(ticker))
-                trading_information = all_html \
-                    .find_all('div', {'class': statistics_section_class2})[0] \
-                    .find_all('table', {'class': table_class})
+        except IndexError:
+            self._logger.exception("{}: returned html not in expected format".format(ticker))
+            raise IndexError
 
-                iteration_function(trading_information)
+        # Temp list
+        col = []
+        val = []
 
-            except IndexError:
-                self._logger.exception("{}: returned html not in expected format".format(ticker))
-                raise IndexError
+        # Get all keys into column and values into values from the result dictionary
+        for colnames, value in zip(self._result_dict.keys(), self._result_dict.values()):
+            col.append(colnames)
+            val.append(value)
 
-            # Temp list
-            col = []
-            val = []
+        self._logger.info("{}: Converting string to numeric values...".format(ticker))
+        # Convert all numbers to base of 1, 1M = 1,000,000, 1k = 1,000, 5% = 0.05
+        for item in self._result_dict.values():
 
-            # Get all keys into column and values into values from the result dictionary
-            for colnames, value in zip(result_dict.keys(), result_dict.values()):
-                col.append(colnames)
-                val.append(value)
+            # Making sure we are not altering date values
+            if item[0:3] not in ('Mar', 'May'):
+                for characters in item:
+                    if characters in ('B', 'M', 'k', '%'):
+                        index = val.index(item)
+                        val[index] = val[index].replace(characters, '')
+                        if characters == 'B':
+                            val[index] = str(float(val[index].replace(',', '')) * 1000000000)
+                        elif characters == 'k':
+                            val[index] = str(float(val[index].replace(',', '')) * 1000)
+                        elif characters == 'M':
+                            val[index] = str(float(val[index].replace(',', '')) * 1000000)
+                        elif characters == '%':
+                            val[index] = str(float(val[index].replace(',', '')) / 100)
 
-            self._logger.info("{}: Converting string to numeric values...".format(ticker))
-            # Convert all numbers to base of 1, 1M = 1,000,000, 1k = 1,000, 5% = 0.05
-            for item in result_dict.values():
+        self._lock.acquire()
+        self._logger.debug("{} locked".format(ticker))
 
-                # Making sure we are not altering date values
-                if item[0:3] not in ('Mar', 'May'):
-                    for characters in item:
-                        if characters in ('B', 'M', 'k', '%'):
-                            index = val.index(item)
-                            val[index] = val[index].replace(characters, '')
-                            if characters == 'B':
-                                val[index] = str(float(val[index].replace(',', '')) * 1000000000)
-                            elif characters == 'k':
-                                val[index] = str(float(val[index].replace(',', '')) * 1000)
-                            elif characters == 'M':
-                                val[index] = str(float(val[index].replace(',', '')) * 1000000)
-                            elif characters == '%':
-                                val[index] = str(float(val[index].replace(',', '')) / 100)
+        # test to see if dataframe dict exists, if it doesn't create dictionary, else append.
+        if isinstance(None, type(self._dataframe)):
+            self._dataframe = pd.DataFrame(val, col, columns=[ticker])
+        else:
+            self._dataframe[ticker] = val
 
-            # test to see if dataframe dict exists, if it doesn't create dictionary, else append.
-            if isinstance(None, type(self._dataframe)):
-                self._dataframe = pd.DataFrame(val, col, columns=[ticker])
-            else:
-                self._dataframe[ticker] = val
+        self._lock.release()
+        self._logger.debug("{} unlocked".format(ticker))
 
-            # write to csv if requested
-            if self._file_save:
-                self.csv_writer(self._store_location, self._folder_name, "Statistics_data.csv", self._dataframe)
+    def run(self):
 
-            # populating self.short_date list to be used in downsize method
-            self._short_date = []
+        # parsing data for multiple stock symbols in parallel
+        MultiThreader.run_thread_pool(self._tickers, self.data_parser, 15)
 
-            for x, y in zip([44, 45, 48], [13, 12, 13]):
-                self._short_date.append(list(self._dataframe.index)[x][y:])
+        # write to csv if requested
+        if self._file_save:
+            self.csv_writer(self._store_location, self._folder_name, "Statistics_data.csv", self._dataframe)
 
-            self.__downsize()
-            self.__scoring()
+        # populating self.short_date list to be used in downsize method
+        self._short_date = []
+
+        for x, y in zip([44, 45, 48], [13, 12, 13]):
+            self._short_date.append(list(self._dataframe.index)[x][y:])
+
+        self.__downsize()
+        self.__scoring()
 
     def __downsize(self):
         """
@@ -332,4 +345,4 @@ if __name__ == "__main__":
     user_input = user_input.replace(' ', '').split(sep=',')
 
     YFStatistics(user_input, store_location="/home/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
-                 file_save=True).data_parser()
+                 file_save=True).run()
