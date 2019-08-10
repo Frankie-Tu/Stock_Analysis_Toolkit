@@ -4,7 +4,6 @@ from scrappers2.utils.multi_threader import MultiThreader
 from collections import OrderedDict
 import pandas as pd
 import re
-from threading import Lock
 
 
 class YFSummary(ScrapperAbstract):
@@ -23,8 +22,6 @@ class YFSummary(ScrapperAbstract):
     def __init__(self, args, store_location, folder_name, file_save):
         super().__init__(args, store_location, folder_name, file_save)
         self._dataframe = None
-        self._lock = Lock()
-        self._result_dict = OrderedDict()
 
     def data_parser(self, ticker):
         """
@@ -33,6 +30,7 @@ class YFSummary(ScrapperAbstract):
 
         :return: None
         """
+        result_dict = OrderedDict()
 
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "?p=" + ticker
 
@@ -67,28 +65,28 @@ class YFSummary(ScrapperAbstract):
         # Append result
         fifty2_week_range_high, fifty2_week_range_low, current_price = list(map(lambda x: x.replace(',', ''), [fifty2_week_range_high, fifty2_week_range_low, current_price]))
 
-        self._result_dict['52 Week Low'] = float(fifty2_week_range_low)
-        self._result_dict['52 Week High'] = float(fifty2_week_range_high)
+        result_dict['52 Week Low'] = float(fifty2_week_range_low)
+        result_dict['52 Week High'] = float(fifty2_week_range_high)
 
         if one_year_target == 'N/A':
-            self._result_dict['1y Target Est'] = 0
+            result_dict['1y Target Est'] = 0
         else:
-            self._result_dict['1y Target Est'] = float(one_year_target.replace(',', ''))
+            result_dict['1y Target Est'] = float(one_year_target.replace(',', ''))
 
-        self._result_dict['Change %'] = float(change)
-        self._result_dict['Current Price'] = float(current_price)
+        result_dict['Change %'] = float(change)
+        result_dict['Current Price'] = float(current_price)
 
         # Based on target
         self._logger.info('{}: Calculating growth potential and current price percentile'.format(ticker))
-        self._result_dict['Growth Potential'] = float(self._result_dict['1y Target Est']) / float(self._result_dict['Current Price']) - 1
-        self._result_dict['52 Week Percentile'] = (float(self._result_dict['Current Price']) - float(self._result_dict['52 Week Low'])) / \
-                                            (float(self._result_dict['52 Week High']) - float(self._result_dict['52 Week Low']))
+        result_dict['Growth Potential'] = float(result_dict['1y Target Est']) / float(result_dict['Current Price']) - 1
+        result_dict['52 Week Percentile'] = (float(result_dict['Current Price']) - float(result_dict['52 Week Low'])) / \
+                                            (float(result_dict['52 Week High']) - float(result_dict['52 Week Low']))
 
         col = []
         val = []
 
         # Transfer info from result_dict to col and val list
-        for key, value in zip(self._result_dict.keys(), self._result_dict.values()):
+        for key, value in zip(result_dict.keys(), result_dict.values()):
             col.append(key)
             val.append(round(value, 4))
 

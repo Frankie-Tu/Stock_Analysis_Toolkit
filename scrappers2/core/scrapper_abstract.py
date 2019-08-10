@@ -1,10 +1,11 @@
-import requests
-from bs4 import BeautifulSoup as Soup
-
-import os
-from abc import ABC, abstractmethod
 from scrappers2.utils.logger import Logger
 from scrappers2.utils.system_spec import SystemSpec
+
+import requests
+import os
+from bs4 import BeautifulSoup as Soup
+from abc import ABC, abstractmethod
+from threading import Lock
 
 
 class ScrapperAbstract(ABC):
@@ -22,6 +23,7 @@ class ScrapperAbstract(ABC):
         self._file_save = file_save
         self._separator = SystemSpec.get_separator()
         self._logger = Logger(name=__name__).get_logger()
+        self._lock = Lock()
 
     def requester(self, url):
         """
