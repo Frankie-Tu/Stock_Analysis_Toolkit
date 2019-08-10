@@ -29,7 +29,7 @@ class Logger:
             os.makedirs(log_dir)
 
         log_file = log_dir + self.separator + \
-                   "ScrapperApp_{}.log".format(strftime("%Y-%m-%d %H:%M:%S"))
+                   "ScrapperApp_{}.log".format(strftime("%Y-%m-%d %H.%M.%S"))
 
         logging.basicConfig(filename=log_file,
                             level=self.log_level,
