@@ -34,34 +34,38 @@ class YFSummary(ScrapperAbstract):
 
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "?p=" + ticker
 
-        # fetch data
-        self._logger.info("{}: Sending requests...".format(ticker))
-        my_soup = self.requester(url)
-        all_html = my_soup.find_all('table', {'class': "W(100%)"})
-        fifty2_week_range = all_html[0].find_all('tr', {'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px) '})[5]
-        fifty2_week_range_value = fifty2_week_range.find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0]
-        fifty2_week_range_value = fifty2_week_range_value.text.split(sep=' - ')
-        fifty2_week_range_low = fifty2_week_range_value[0]
-        fifty2_week_range_high = fifty2_week_range_value[1]
+        try:
+            # fetch data
+            self._logger.info("{}: Sending requests...".format(ticker))
+            my_soup = self.requester(url)
+            all_html = my_soup.find_all('table', {'class': "W(100%)"})
+            fifty2_week_range = all_html[0].find_all('tr', {'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px)'})[5]
+            fifty2_week_range_value = fifty2_week_range.find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0]
+            fifty2_week_range_value = fifty2_week_range_value.text.split(sep=' - ')
+            fifty2_week_range_low = fifty2_week_range_value[0]
+            fifty2_week_range_high = fifty2_week_range_value[1]
 
-        # 1y Target Est
-        self._logger.info('{}: Scrapping 1 year target estimates'.format(ticker))
-        all_html = my_soup.find_all('table', {'class': "W(100%) M(0) Bdcl(c)"})
-        one_year_target = all_html[0].find_all('tr', {
-            'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px) Bdbw(0)! '})[0]\
-            .find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0].span.text
+            # 1y Target Est
+            self._logger.info('{}: Scrapping 1 year target estimates'.format(ticker))
+            all_html = my_soup.find_all('table', {'class': "W(100%) M(0) Bdcl(c)"})
+            one_year_target = all_html[0].find_all('tr', {
+                'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px) Bdbw(0)!'})[0]\
+                .find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0].span.text
 
-        # Stock price.
-        self._logger.info('{}: Scrapping price info & percentage change'.format(ticker))
-        all_html_2 = my_soup.find_all('div', {'class': 'My(6px) Pos(r) smartphone_Mt(6px)'})
+            # Stock price.
+            self._logger.info('{}: Scrapping price info & percentage change'.format(ticker))
+            all_html_2 = my_soup.find_all('div', {'class': 'My(6px) Pos(r) smartphone_Mt(6px)'})
 
-        current_price = all_html_2[0].div.span.text
+            current_price = all_html_2[0].div.span.text
 
-        # Stock price change
-        change = all_html_2[0].div.find_all('span', {'class': re.compile(r"Trsdu\(0.3s\) Fw\(500\) Fz\(14px\)")})[0]\
-            .text.split(sep=' ')[1].replace('(', "").replace(')', "").replace('%', '')
-        change = str(float(change) / 100)
+            # Stock price change
+            change = all_html_2[0].div.find_all('span', {'class': re.compile(r"Trsdu\(0.3s\) Fw\(500\) Fz\(14px\)")})[0]\
+                .text.split(sep=' ')[1].replace('(', "").replace(')', "").replace('%', '')
+            change = str(float(change) / 100)
 
+        except IndexError:
+            self._logger.exception("{}: returned html not in expected format".format(ticker))
+            raise IndexError
         # Append result
         fifty2_week_range_high, fifty2_week_range_low, current_price = list(map(lambda x: x.replace(',', ''), [fifty2_week_range_high, fifty2_week_range_low, current_price]))
 
@@ -116,5 +120,5 @@ if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
     user_input = user_input.replace(' ', '').split(sep=',')
 
-    YFSummary(user_input, store_location="/home/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
+    YFSummary(user_input, store_location="/Users/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
               file_save=True).run()
