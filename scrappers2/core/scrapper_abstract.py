@@ -67,13 +67,12 @@ class ScrapperAbstract(ABC):
             try:
                 with open(full_path + self._separator + file_name, mode='w') as file:
                     self._logger.info("Saving dataframe to path {}".format(full_path + self._separator + file_name))
-                    file.write('Ranking Info' + '\n')
                     dataframe_.to_csv(file)
 
                 for df in dataframes:
                     with open(full_path + self._separator + file_name, mode='a') as file:
+                        file.write("\n")
                         self._logger.info("Appending dataframe to path {}".format(full_path + self._separator + file_name))
-                        file.write('\n' + 'Raw Data' + '\n')
                         df.to_csv(file, header=True)
 
             except IOError:

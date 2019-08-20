@@ -31,7 +31,6 @@ class YFStatistics(ScrapperAbstract):
         self._scoring_df = None  # Place holder, listing each every single score for each category for all tickers
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
         self._ignored_stats = []  # place holder, showing all the stats that were ignored in the calculation
-        self._result_dict = OrderedDict()
         self._lock = Lock()
 
     def data_parser(self, ticker):
@@ -60,8 +59,10 @@ class YFStatistics(ScrapperAbstract):
 
             # Dumping results into result dictionary. Both key and value.
             for item, num in zip(mylist, mylist):
-                self._result_dict[item.span.text] = num.find_all('td', {'class': class_name})[0].text
+                result_dict[item.span.text] = num.find_all('td', {'class': class_name})[0].text
 
+        result_dict = OrderedDict()
+        
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
         statistics_class = 'Mstart(a) Mend(a)'
         statistics_section_class = 'Mb(10px) Pend(20px) smartphone_Pend(0px)'
@@ -82,7 +83,7 @@ class YFStatistics(ScrapperAbstract):
                 .find_all("tr")
 
             for item, num in zip(valuation_measures, valuation_measures):
-                self._result_dict[item.span.text] = num \
+                result_dict[item.span.text] = num \
                     .find_all('td', {'class': td_class})[0].text
 
             # Financial Highlights:
@@ -110,13 +111,13 @@ class YFStatistics(ScrapperAbstract):
         val = []
 
         # Get all keys into column and values into values from the result dictionary
-        for colnames, value in zip(self._result_dict.keys(), self._result_dict.values()):
+        for colnames, value in zip(result_dict.keys(), result_dict.values()):
             col.append(colnames)
             val.append(value)
 
         self._logger.info("{}: Converting string to numeric values...".format(ticker))
         # Convert all numbers to base of 1, 1M = 1,000,000, 1k = 1,000, 5% = 0.05
-        for item in self._result_dict.values():
+        for item in result_dict.values():
 
             # Making sure we are not altering date values
             if item[0:3] not in ('Mar', 'May'):
@@ -344,5 +345,5 @@ if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
     user_input = user_input.replace(' ', '').split(sep=',')
 
-    YFStatistics(user_input, store_location="/home/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
+    YFStatistics(user_input, store_location="/Users/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
                  file_save=True).run()

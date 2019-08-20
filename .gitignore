@@ -8,3 +8,5 @@ venv/
 Main*
 .vscode/
 **.csv
+**.log
+**.DS_Store
