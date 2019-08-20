@@ -77,7 +77,7 @@ class YFStatement(ScrapperAbstract):
         statement_growth = self.growth_calculation(raw_data)
 
         if self._file_save:
-            self.csv_writer(self._store_location, self._folder_name, ticker + ".csv", raw_data, statement_growth)
+            self.csv_writer(self._store_location, self._folder_name, ticker + "_" + self.statement + ".csv", raw_data, statement_growth)
 
     @staticmethod
     def growth_calculation(raw_data):
