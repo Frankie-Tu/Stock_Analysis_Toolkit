@@ -3,6 +3,7 @@ import sys
 from time import strftime
 from scrappers2.utils.system_spec import SystemSpec
 import os
+from pathlib import Path
 
 
 class Logger:
@@ -22,7 +23,7 @@ class Logger:
 
         handler = logging.StreamHandler(sys.stdout)
 
-        log_dir = os.path.dirname(os.path.realpath(__file__)) + self.separator + "logs"
+        log_dir = str(Path(__file__).parent.parent) + self.separator + "logs"
 
         # if path doesn't exist, create
         if not os.path.exists(log_dir):
