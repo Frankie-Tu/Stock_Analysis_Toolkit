@@ -43,8 +43,7 @@ class YFSummary(ScrapperAbstract):
             my_soup = self.requester(url)
             all_html = my_soup.find_all('table', {'class': "W(100%)"})
             fifty2_week_range = all_html[0].find_all('tr', {'class': 'Bxz(bb) Bdbw(1px) Bdbs(s) Bdc($c-fuji-grey-c) H(36px)'})[5]
-            fifty2_week_range_value = fifty2_week_range.find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0]
-            fifty2_week_range_value = fifty2_week_range_value.text.split(sep=' - ')
+            fifty2_week_range_value = fifty2_week_range.find_all('td', {'class': 'Ta(end) Fw(600) Lh(14px)'})[0].text.split(sep=' - ')
             fifty2_week_range_low = fifty2_week_range_value[0]
             fifty2_week_range_high = fifty2_week_range_value[1]
 
@@ -69,6 +68,7 @@ class YFSummary(ScrapperAbstract):
         except IndexError:
             self._logger.exception("{}: returned html not in expected format".format(ticker))
             raise IndexError
+
         # Append result
         fifty2_week_range_high, fifty2_week_range_low, current_price = list(map(lambda x: x.replace(',', ''), [fifty2_week_range_high, fifty2_week_range_low, current_price]))
 
