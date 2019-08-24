@@ -6,6 +6,7 @@ import os
 from bs4 import BeautifulSoup as Soup
 from abc import ABC, abstractmethod
 from threading import Lock
+from time import strftime
 
 
 class ScrapperAbstract(ABC):
@@ -14,15 +15,18 @@ class ScrapperAbstract(ABC):
     :param store_location: String => root directory on hard drive to save output
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
+    :param start_time: strftime => start time of the application for log timestamp
+    :param logger_name : String => default __name__
     """
 
-    def __init__(self, tickers, store_location, folder_name='test_folder', file_save=False):
+    def __init__(self, tickers, store_location, folder_name='test_folder', file_save=False,
+                 start_time=strftime("%Y-%m-%d %H.%M.%S"), logger_name=__name__):
         self._tickers = tickers
         self._store_location = store_location
         self._folder_name = folder_name
         self._file_save = file_save
         self._separator = SystemSpec.get_separator()
-        self._logger = Logger(name=__name__).get_logger()
+        self._logger = Logger(name=logger_name, start_time=start_time).get_logger()
         self._lock = Lock()
 
     def requester(self, url):

@@ -5,6 +5,7 @@ import pandas as pd
 from collections import OrderedDict
 import numpy as np
 import math
+from time import strftime
 
 
 class YFStatement(ScrapperAbstract):
@@ -19,10 +20,12 @@ class YFStatement(ScrapperAbstract):
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
     :param statement_type: type of statement => IS, BS, CF
+    :param start_time: strftime => start time of the application for log timestamp
     """
 
-    def __init__(self, args, store_location, folder_name, file_save, statement_type):
-        super().__init__(args, store_location, folder_name, file_save)
+    def __init__(self, args, store_location, folder_name, file_save, statement_type, start_time=strftime("%Y-%m-%d %H.%M.%S")):
+        super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
+                         file_save=file_save, start_time=start_time, logger_name=__name__)
         self.statement_type = {'IS': 'financials',
                                'BS': 'balance-sheet',
                                'CF': 'cash-flow'}
@@ -31,7 +34,6 @@ class YFStatement(ScrapperAbstract):
 
     def data_parser(self, ticker):
         """
-        TODO: figure out how to implement the statement type
         :param ticker: String => stock symbol
         :return: None
         """

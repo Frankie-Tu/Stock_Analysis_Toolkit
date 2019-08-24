@@ -4,6 +4,7 @@ from scrappers2.utils.multi_threader import MultiThreader
 from collections import OrderedDict
 import pandas as pd
 import re
+from time import strftime
 
 
 class YFSummary(ScrapperAbstract):
@@ -17,10 +18,12 @@ class YFSummary(ScrapperAbstract):
     :param store_location: String => root directory on hard drive to save output
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
+    :param start_time: strftime => start time of the application for log timestamp
     """
 
-    def __init__(self, args, store_location, folder_name, file_save):
-        super().__init__(args, store_location, folder_name, file_save)
+    def __init__(self, args, store_location, folder_name, file_save, start_time=strftime("%Y-%m-%d %H.%M.%S")):
+        super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
+                         file_save=file_save, start_time=start_time, logger_name=__name__)
         self._dataframe = None
 
     def data_parser(self, ticker):
