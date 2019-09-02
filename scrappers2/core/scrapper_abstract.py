@@ -3,6 +3,7 @@ from scrappers2.utils.system_spec import SystemSpec
 
 import requests
 import os
+import sys
 from bs4 import BeautifulSoup as Soup
 from abc import ABC, abstractmethod
 from threading import Lock
@@ -59,7 +60,11 @@ class ScrapperAbstract(ABC):
         # if path doesn't exist, create
         if not os.path.exists(full_path):
             self._logger.info("Os path: {} does not exist, creating one now".format(full_path))
-            os.makedirs(full_path)
+            try:
+                os.makedirs(full_path)
+            except PermissionError:
+                self._logger.exception("Please check if you have permission to {}".format(full_path))
+                sys.exit(1)
 
         if len(dataframes) == 0:
             try:

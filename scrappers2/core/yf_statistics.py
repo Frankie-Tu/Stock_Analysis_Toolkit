@@ -342,10 +342,19 @@ class YFStatistics(ScrapperAbstract):
                             self._df_downsized.loc[all_values, :])
         self._scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
 
+    def get_score(self):
+        return self._scoring_dict
+
+    def get_ranking(self):
+        return self._scoring_df
+
+    def get_downsized_df(self):
+        return self._df_downsized
+
 
 if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
     user_input = user_input.replace(' ', '').split(sep=',')
 
-    YFStatistics(user_input, store_location="/Users/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
+    YFStatistics(user_input, store_location="/Users/frankie/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
                  file_save=True).run()
