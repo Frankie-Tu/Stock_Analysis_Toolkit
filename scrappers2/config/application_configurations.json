@@ -1,0 +1,24 @@
+{
+  "general": {
+    "symbols": ["bns.to","td.to","ry.to","na.to", "bmo.to"],
+    "store_location": "/home/frankie/repos/Stock_Analysis_Toolkit/tests",
+    "file_save": true
+  },
+  "statistics": {
+    "folder_name": "statistics"
+  },
+  "statement": {
+    "IS": {
+      "folder_name": "income_statement"
+    },
+    "BS": {
+      "folder_name": "balance_sheet"
+    },
+    "CF": {
+      "folder_name": "cash_flow"
+    }
+  },
+  "summary": {
+    "folder_name": "summary"
+  }
+}

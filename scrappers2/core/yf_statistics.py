@@ -1,5 +1,6 @@
 from scrappers2.core.scrapper_abstract import ScrapperAbstract
 from scrappers2.utils.multi_threader import MultiThreader
+from scrappers2.utils.config_reader import ConfigReader
 
 from collections import OrderedDict
 import pandas as pd
@@ -355,6 +356,11 @@ class YFStatistics(ScrapperAbstract):
 if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
     user_input = user_input.replace(' ', '').split(sep=',')
+    config = ConfigReader().get_configurations()
+    general_conf = config.get("general")
 
-    YFStatistics(user_input, store_location="/Users/frankie/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
-                 file_save=True).run()
+    if user_input == [""]:
+        user_input = general_conf.get("symbols")
+
+    YFStatistics(user_input, store_location=general_conf.get("store_location"),
+                 folder_name=config.get("statistics").get("folder_name"), file_save=general_conf.get("file_save")).run()
