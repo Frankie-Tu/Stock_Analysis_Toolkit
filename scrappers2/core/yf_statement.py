@@ -1,5 +1,6 @@
 from scrappers2.core.scrapper_abstract import ScrapperAbstract
 from scrappers2.utils.multi_threader import MultiThreader
+from scrappers2.utils.data_writer import DataWriter
 
 import pandas as pd
 from collections import OrderedDict
@@ -79,7 +80,7 @@ class YFStatement(ScrapperAbstract):
         statement_growth = self.growth_calculation(raw_data)
 
         if self._file_save:
-            self.csv_writer(self._store_location, self._folder_name, ticker + "_" + self.statement + ".csv", raw_data, statement_growth)
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, ticker + "_" + self.statement + ".csv", raw_data, statement_growth)
 
     @staticmethod
     def growth_calculation(raw_data):
@@ -160,5 +161,5 @@ if __name__ == "__main__":
 
     user_input = user_input.replace(' ', '').split(sep=',')
 
-    YFStatement(user_input, store_location="/Users/frankietu/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
+    YFStatement(user_input, store_location="/home/frankie/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
                 file_save=True, statement_type=user_input2).run()

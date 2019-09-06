@@ -1,6 +1,7 @@
 from scrappers2.core.scrapper_abstract import ScrapperAbstract
 from scrappers2.utils.multi_threader import MultiThreader
 from scrappers2.utils.config_reader import ConfigReader
+from scrappers2.utils.data_writer import DataWriter
 
 from collections import OrderedDict
 import pandas as pd
@@ -156,7 +157,7 @@ class YFStatistics(ScrapperAbstract):
 
         # write to csv if requested
         if self._file_save:
-            self.csv_writer(self._store_location, self._folder_name, "Statistics_data.csv", self._dataframe)
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Statistics_data.csv", self._dataframe)
 
         # populating self.short_date list to be used in downsize method
         self._short_date = []
@@ -224,7 +225,7 @@ class YFStatistics(ScrapperAbstract):
 
         # write to csv if requested
         if self._file_save:
-            self.csv_writer(self._store_location, self._folder_name, "Statistics_data_abstract.csv", self._df_downsized)
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Statistics_data_abstract.csv", self._df_downsized)
 
     def __target_rows(self, value_list):
         """
@@ -339,8 +340,8 @@ class YFStatistics(ScrapperAbstract):
         self._scoring_df = pd.DataFrame(mydict2, index=self._df_downsized.columns).transpose()
 
         if self._file_save:
-            self.csv_writer(self._store_location, self._folder_name, "Ranking_information.csv", self._scoring_df,
-                            self._df_downsized.loc[all_values, :])
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Ranking_information.csv", self._scoring_df,
+                                                self._df_downsized.loc[all_values, :])
         self._scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
 
     def get_score(self):
