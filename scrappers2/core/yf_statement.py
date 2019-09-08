@@ -1,6 +1,7 @@
 from scrappers2.core.scrapper_abstract import ScrapperAbstract
 from scrappers2.utils.multi_threader import MultiThreader
 from scrappers2.utils.data_writer import DataWriter
+from scrappers2.utils.config_reader import ConfigReader
 
 import pandas as pd
 from collections import OrderedDict
@@ -27,9 +28,7 @@ class YFStatement(ScrapperAbstract):
     def __init__(self, args, store_location, folder_name, file_save, statement_type, start_time=strftime("%Y-%m-%d %H.%M.%S")):
         super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
                          file_save=file_save, start_time=start_time, logger_name=__name__)
-        self._statement_type = {'IS': 'financials',
-                               'BS': 'balance-sheet',
-                               'CF': 'cash-flow'}
+        self._statement_type = ConfigReader(file="application_logic.json").get_configurations().get("statement").get("statement_type")
         self._statement = statement_type.upper()
         self._growth_statements = OrderedDict()  # Place holder,
 
@@ -79,11 +78,11 @@ class YFStatement(ScrapperAbstract):
         raw_data = pd.DataFrame(result_list, index=row_names, columns=date_list)
         statement_growth = self.__growth_calculation(raw_data)
 
-        if self._file_save:
-            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, ticker + "_" + self._statement + ".csv", raw_data, statement_growth)
-
         self._lock.acquire()
         self._logger.debug("{} locked".format(ticker))
+
+        if self._file_save:
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, ticker + "_" + self._statement + ".csv", raw_data, statement_growth)
 
         self._growth_statements[ticker] = statement_growth
 
@@ -157,6 +156,8 @@ class YFStatement(ScrapperAbstract):
 
 if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
+    user_input = user_input.replace(' ', '').split(sep=',')
+
     while True:
         print(
             """
@@ -169,8 +170,12 @@ if __name__ == "__main__":
         user_input2 = input("Statement Type Initial: ").upper()
         if user_input2 in ('IS', 'BS', 'CF'):
             break
+    config = ConfigReader().get_configurations()
+    general_conf = config.get("general")
 
-    user_input = user_input.replace(' ', '').split(sep=',')
+    if user_input == [""]:
+        user_input = general_conf.get("symbols")
 
-    YFStatement(user_input, store_location="/home/frankie/repos/Stock_Analysis_Toolkit/tests", folder_name='test',
-                file_save=True, statement_type=user_input2).run()
+    YFStatement(user_input, store_location=general_conf.get("store_location"),
+                folder_name=config.get("statement").get(user_input2).get("folder_name"),
+                file_save=general_conf.get("file_save"), statement_type=user_input2).run()

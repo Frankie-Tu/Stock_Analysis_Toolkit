@@ -1,0 +1,12 @@
+{
+  "statistics": {
+
+},
+  "statement": {
+    "statement_type": {
+      "IS": "financials",
+      "BS": "balance-sheet",
+      "CF": "cash-flow"
+    }
+  }
+}
