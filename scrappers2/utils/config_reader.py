@@ -8,11 +8,16 @@ import sys
 
 
 class ConfigReader:
-    def __init__(self, start_time=strftime("%Y-%m-%d %H.%M.%S")):
+    """
+    read user configurations
+
+    :param start_time: strftime => start time of the application for log timestamp
+    """
+    def __init__(self, start_time=strftime("%Y-%m-%d %H.%M.%S"), file="application_configurations.json"):
         self._logger = Logger(name=__name__, start_time=start_time).get_logger()
         file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         separator = SystemSpec().get_separator()
-        self.configurations = file_root + separator + "config" + separator + "application_configurations.json"
+        self.configurations = file_root + separator + "config" + separator + file
 
     def get_configurations(self):
         try:

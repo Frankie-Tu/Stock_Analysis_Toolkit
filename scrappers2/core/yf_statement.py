@@ -27,11 +27,11 @@ class YFStatement(ScrapperAbstract):
     def __init__(self, args, store_location, folder_name, file_save, statement_type, start_time=strftime("%Y-%m-%d %H.%M.%S")):
         super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
                          file_save=file_save, start_time=start_time, logger_name=__name__)
-        self.statement_type = {'IS': 'financials',
+        self._statement_type = {'IS': 'financials',
                                'BS': 'balance-sheet',
                                'CF': 'cash-flow'}
-        self.statement = statement_type.upper()
-        self.statement_growth = None  # Place holder,
+        self._statement = statement_type.upper()
+        self._growth_statements = OrderedDict()  # Place holder,
 
     def data_parser(self, ticker):
         """
@@ -47,7 +47,7 @@ class YFStatement(ScrapperAbstract):
                 return float(value2.replace(',', ''))
 
         url = "https://ca.finance.yahoo.com/quote/" + ticker + \
-              "/" + self.statement_type[self.statement] + "?p=" + ticker
+              "/" + self._statement_type[self._statement] + "?p=" + ticker
 
         try:
             # fetch data
@@ -77,13 +77,21 @@ class YFStatement(ScrapperAbstract):
             raise IndexError
 
         raw_data = pd.DataFrame(result_list, index=row_names, columns=date_list)
-        statement_growth = self.growth_calculation(raw_data)
+        statement_growth = self.__growth_calculation(raw_data)
 
         if self._file_save:
-            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, ticker + "_" + self.statement + ".csv", raw_data, statement_growth)
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, ticker + "_" + self._statement + ".csv", raw_data, statement_growth)
+
+        self._lock.acquire()
+        self._logger.debug("{} locked".format(ticker))
+
+        self._growth_statements[ticker] = statement_growth
+
+        self._lock.release()
+        self._logger.debug("{} unlocked".format(ticker))
 
     @staticmethod
-    def growth_calculation(raw_data):
+    def __growth_calculation(raw_data):
         """
         help calculating yoy growth for each item on the statement
         :param raw_data: raw statement data: Pandas.DataFrame
@@ -142,6 +150,9 @@ class YFStatement(ScrapperAbstract):
     def run(self):
         # parsing data from multiple stock symbols in parallel
         MultiThreader.run_thread_pool(self._tickers, self.data_parser, 15)
+
+    def get_statement(self, ticker):
+        return self._growth_statements.get(ticker)
 
 
 if __name__ == "__main__":
