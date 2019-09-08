@@ -1,5 +1,6 @@
 from scrappers2.utils.logger import Logger
 from scrappers2.utils.system_spec import SystemSpec
+from scrappers2.utils.config_reader import ConfigReader
 
 import requests
 import os
@@ -29,6 +30,7 @@ class ScrapperAbstract(ABC):
         self._separator = SystemSpec.get_separator()
         self._logger = Logger(name=logger_name, start_time=start_time).get_logger()
         self._lock = Lock()
+        self._application_logic = ConfigReader(file="application_logic.json").get_configurations()
 
     def requester(self, url):
         """

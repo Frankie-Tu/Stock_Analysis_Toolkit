@@ -28,7 +28,7 @@ class YFStatement(ScrapperAbstract):
     def __init__(self, args, store_location, folder_name, file_save, statement_type, start_time=strftime("%Y-%m-%d %H.%M.%S")):
         super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
                          file_save=file_save, start_time=start_time, logger_name=__name__)
-        self._statement_type = ConfigReader(file="application_logic.json").get_configurations().get("statement").get("statement_type")
+        self._statement_type = self._application_logic.get("statement").get("statement_type")
         self._statement = statement_type.upper()
         self._growth_statements = OrderedDict()  # Place holder,
 

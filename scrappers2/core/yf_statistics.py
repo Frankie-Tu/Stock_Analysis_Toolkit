@@ -28,6 +28,7 @@ class YFStatistics(ScrapperAbstract):
     def __init__(self, args, store_location, folder_name, file_save, start_time=strftime("%Y-%m-%d %H.%M.%S")):
         super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
                          file_save=file_save, start_time=start_time, logger_name=__name__)
+        self._application_logic = self._application_logic.get("statistics")
         self._dataframe = None  # Place holder, all stats
         self._df_downsized = None  # Place holder, downsized df
         self._target_list = None  # Place holder, row item targets
@@ -68,12 +69,12 @@ class YFStatistics(ScrapperAbstract):
         result_dict = OrderedDict()
         
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
-        statistics_class = 'Mstart(a) Mend(a)'
-        statistics_section_class = 'Mb(10px) Pend(20px) smartphone_Pend(0px)'
-        statistics_section_class_val_measure = "Mb(10px) smartphone_Pend(0px) Pend(20px)"
-        statistics_section_class2 = 'Pstart(20px) smartphone_Pstart(0px)'
-        td_class = 'Fz(s) Fw(500) Ta(end) Pstart(10px) Miw(60px)'
-        table_class = 'table-qsp-stats Mt(10px)'
+        statistics_class = self._application_logic.get("html_classes").get("statistics_class")
+        statistics_section_class = self._application_logic.get("html_classes").get("statistics_section_class")
+        statistics_section_class_val_measure = self._application_logic.get("html_classes").get("statistics_section_class_val_measure")
+        statistics_section_class2 = self._application_logic.get("html_classes").get("statistics_section_class2")
+        td_class = self._application_logic.get("html_classes").get("td_class")
+        table_class = self._application_logic.get("html_classes").get("table_class")
 
         try:
             # fetch data
@@ -157,7 +158,8 @@ class YFStatistics(ScrapperAbstract):
 
         # write to csv if requested
         if self._file_save:
-            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Statistics_data.csv", self._dataframe)
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name,
+                                                self._application_logic.get("file_names").get("data_stats"), self._dataframe)
 
         # populating self.short_date list to be used in downsize method
         self._short_date = []
@@ -178,54 +180,17 @@ class YFStatistics(ScrapperAbstract):
         :return: None
         """
         # Class Attributes that are important to keep
-        important_item = ['Trailing P/E',
-                          'Forward P/E',
-                          'PEG Ratio (5 yr expected)',
-                          'Price/Sales',
-                          'Price/Book',
-                          'Profit Margin',
-                          'Operating Margin',
-                          'Return on Assets',
-                          'Return on Equity',
-                          'Revenue Per Share',
-                          'Quarterly Revenue Growth',
-                          'Gross Profit',
-                          'EBITDA',
-                          'Net Income Avi to Common',
-                          'Quarterly Earnings Growth',
-                          'Total Cash Per Share',
-                          'Total Debt/Equity',
-                          'Current Ratio',
-                          'Operating Cash Flow',
-                          'Levered Free Cash Flow',
-                          'Beta (3Y Monthly)',
-                          '52-Week Change',
-                          'S&P500 52-Week Change',
-                          '52 Week High',
-                          '52 Week Low',
-                          '50-Day Moving Average',
-                          '200-Day Moving Average',
-                          'Avg Vol (3 month)',
-                          'Avg Vol (10 day)',
-                          'Shares Outstanding',
-                          'Shares Short ' + self._short_date[0],
+        important_item = self._application_logic.get("important_item")
+        important_item.extend(['Shares Short ' + self._short_date[0],
                           'Short Ratio ' + self._short_date[1],
-                          'Shares Short ' + self._short_date[2],
-                          'Forward Annual Dividend Yield',
-                          'Trailing Annual Dividend Yield',
-                          "Payout Ratio"
-                          ]
+                          'Shares Short ' + self._short_date[2]])
 
-        # filtering dataframe to find the indices of only the important rows.
-        mylist = list(filter(lambda x: x in important_item, self._dataframe.index))
-        mylist = list(map(lambda x: list(self._dataframe.index).index(x), mylist))
-
-        # load data from self.dataframe to self.df to be exported where the fundamental deemed as important
-        self._df_downsized = self._dataframe.iloc[mylist, :]
+        self._df_downsized = self._dataframe.filter(important_item, axis=0)
 
         # write to csv if requested
         if self._file_save:
-            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Statistics_data_abstract.csv", self._df_downsized)
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name,
+                                                self._application_logic.get("file_names").get("data_stats_abstract"), self._df_downsized)
 
     def __target_rows(self, value_list):
         """
@@ -259,48 +224,19 @@ class YFStatistics(ScrapperAbstract):
         mydict2 = OrderedDict()
 
         # all values lower the better
-        low_values = ["Trailing P/E",
-                     "Forward P/E",
-                     "PEG Ratio (5 yr expected)",
-                     "Price/Sales",
-                     "Price/Book",
-                     "Total Debt/Equity"]
+        low_values = self._application_logic.get("low_values")
 
         # all values higher the better
-        high_values = ["Profit Margin",
-                      "Operating Margin",
-                      "Return on Assets",
-                      "Return on Equity",
-                      "Quarterly Revenue Growth",
-                      "Quarterly Earnings Growth",
-                      "Current Ratio",
-                      "Forward Annual Dividend Yield",
-                      "Trailing Annual Dividend Yield"]
+        high_values = self._application_logic.get("high_values")
 
         # Secondary Fundamentals
-        secondary_values = ["Gross Profit",
-                           "EBITDA",
-                           "Net Income Avi to Common"]
+        secondary_values = self._application_logic.get("secondary_values")
 
         # All important Fundamentals:
         all_values = low_values + high_values + secondary_values
 
         # Multipliers
-        multiplier = {'Trailing P/E': 0,  # 1.3,
-                       'Forward P/E': 0,  # 1.1,
-                       'PEG Ratio (5 yr expected)': 0,  #1,
-                       'Price/Sales': 0.5,
-                       'Price/Book': 0.5,
-                       'Profit Margin': 1.2,
-                       'Operating Margin': 1.2,
-                       'Return on Assets': 1,
-                       'Return on Equity': 1.1,
-                       'Quarterly Revenue Growth': 0.8,
-                       'Quarterly Earnings Growth': 1,
-                       'Total Debt/Equity': 1.2,
-                       'Current Ratio': 1.1,
-                       'Forward Annual Dividend Yield': 0.4,
-                       'Trailing Annual Dividend Yield': 0.6}
+        multiplier = self._application_logic.get("multiplier")
 
         self.__target_rows(low_values)
 
@@ -340,8 +276,8 @@ class YFStatistics(ScrapperAbstract):
         self._scoring_df = pd.DataFrame(mydict2, index=self._df_downsized.columns).transpose()
 
         if self._file_save:
-            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Ranking_information.csv", self._scoring_df,
-                                                self._df_downsized.loc[all_values, :])
+            DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, self._application_logic.get("file_names").get("ranking_info"),
+                                                self._scoring_df, self._df_downsized.loc[all_values, :])
         self._scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
 
     def get_score(self):
