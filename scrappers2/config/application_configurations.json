@@ -2,7 +2,8 @@
   "general": {
     "symbols": ["bns.to","td.to","ry.to","na.to", "bmo.to"],
     "store_location": "/home/frankie/repos/Stock_Analysis_Toolkit/tests",
-    "file_save": true
+    "file_save": true,
+    "folder_name": "scrapper_app"
   },
   "statistics": {
     "folder_name": "statistics"

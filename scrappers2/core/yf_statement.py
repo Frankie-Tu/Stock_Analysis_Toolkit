@@ -150,8 +150,14 @@ class YFStatement(ScrapperAbstract):
         # parsing data from multiple stock symbols in parallel
         MultiThreader.run_thread_pool(self._tickers, self.data_parser, 15)
 
-    def get_statement(self, ticker):
-        return self._growth_statements.get(ticker)
+    def get_statement(self, *tickers):
+        if len(tickers) == 0:
+            return self._growth_statements
+        else:
+            return_dict = OrderedDict()
+            for ticker in tickers:
+                return_dict[ticker] = self._growth_statements.get(ticker)
+            return return_dict
 
 
 if __name__ == "__main__":

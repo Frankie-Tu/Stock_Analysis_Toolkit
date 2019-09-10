@@ -96,5 +96,17 @@
       "BS": "balance-sheet",
       "CF": "cash-flow"
     }
+  },
+  "cagr": {
+    "average_net_income": [
+      "Net Income From Continuing Ops",
+      "Net Income Applicable To Common Shares"
+    ],
+    "all_income": [
+      "Total Revenue",
+      "Gross Profit",
+      "Net Income From Continuing Ops",
+      "Net Income Applicable To Common Shares"
+    ]
   }
 }
