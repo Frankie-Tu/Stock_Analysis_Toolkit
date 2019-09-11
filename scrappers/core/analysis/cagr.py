@@ -1,6 +1,6 @@
-from scrappers2.core.yf_statement import YFStatement
-from scrappers2.utils.logger import Logger
-from scrappers2.utils.config_reader import ConfigReader
+from scrappers.core.yf_statement import YFStatement
+from scrappers.utils.logger import Logger
+from scrappers.utils.config_reader import ConfigReader
 
 from collections import OrderedDict
 from time import strftime
@@ -27,21 +27,17 @@ class CAGR:
         all_income_columns = self._application_logic.get("all_income")
 
         for ticker in self.statements.keys():
-            local_list = []
-            local_list2 = []
 
             statement = self.statements.get(ticker).filter(average_income_columns, axis=0)
-
-            # append average cagr to list
-            local_list.append((statement.iloc[0,3] + statement.iloc[1,3])/2)
 
             # CAGR for net income to compare with different tickers
             statement = self.statements.get(ticker).filter(all_income_columns, axis=0)
 
-            cagr_avg_dict[ticker] = local_list
+            # append average cagr to list
+            cagr_avg_dict[ticker] = (statement.iloc[0, 3] + statement.iloc[1, 3])/2
             cagr_dict[ticker] = list(statement.iloc[:, 3])
 
-        return pd.DataFrame(cagr_avg_dict), pd.DataFrame(cagr_dict, index=all_income_columns)
+        return cagr_avg_dict, pd.DataFrame(cagr_dict, index=all_income_columns)
 
     def __cash_flow(self):
         print("cash_flow")

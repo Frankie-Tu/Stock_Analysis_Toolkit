@@ -1,6 +1,6 @@
 import unittest
 
-from scrappers2.utils.logger import Logger
+from scrappers.utils.logger import Logger
 
 
 class LoggerTest(unittest.TestCase):

@@ -1,5 +1,5 @@
-from scrappers2.utils.system_spec import SystemSpec
-from scrappers2.utils.logger import Logger
+from scrappers.utils.system_spec import SystemSpec
+from scrappers.utils.logger import Logger
 
 import json
 import os

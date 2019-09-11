@@ -1,7 +1,7 @@
 import unittest
 import time
 
-from scrappers2.utils.multi_threader import MultiThreader
+from scrappers.utils.multi_threader import MultiThreader
 
 
 def test_func_varg(name, *arg):

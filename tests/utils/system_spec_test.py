@@ -2,7 +2,7 @@ import unittest
 import getpass
 import sys
 
-from scrappers2.utils.system_spec import SystemSpec
+from scrappers.utils.system_spec import SystemSpec
 
 
 class SystemSpecTest(unittest.TestCase):

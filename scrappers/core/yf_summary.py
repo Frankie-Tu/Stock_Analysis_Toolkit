@@ -1,7 +1,7 @@
-from scrappers2.core.scrapper_abstract import ScrapperAbstract
-from scrappers2.utils.multi_threader import MultiThreader
-from scrappers2.utils.data_writer import DataWriter
-from scrappers2.utils.config_reader import ConfigReader
+from scrappers.core.scrapper_abstract import ScrapperAbstract
+from scrappers.utils.multi_threader import MultiThreader
+from scrappers.utils.data_writer import DataWriter
+from scrappers.utils.config_reader import ConfigReader
 
 from collections import OrderedDict
 import pandas as pd
@@ -118,6 +118,9 @@ class YFSummary(ScrapperAbstract):
 
         if self._file_save:
             DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, "Summary_data.csv", self._dataframe)
+
+    def get_summary(self):
+        return self._dataframe
 
 
 if __name__ == "__main__":

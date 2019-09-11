@@ -1,128 +1,103 @@
-from scrappers.yf_core import yf_statistics as yf
-from scrappers.yf_core import yf_summary as yfs
-from scrappers.yf_core import yf_statement as yfst
+from scrappers.core.yf_statement import YFStatement
+from scrappers.core.yf_summary import YFSummary
+from scrappers.core.yf_statistics import YFStatistics
+from scrappers.core.analysis.cagr import CAGR
+from scrappers.utils.multi_threader import MultiThreader
+from scrappers.utils.config_reader import ConfigReader
+from scrappers.utils.data_writer import DataWriter
+from scrappers.utils.logger import Logger
+
 from collections import OrderedDict
-import pandas
-import pdb
+from time import strftime
+from pandas import DataFrame
 import sys
-import getpass
+from pdb import set_trace
 
 
 class ScrapperApp:
-
     """
-    Central control of Scrapper  application
+    Central control of Scrapper application
+
+    :param args: list[String] => list of ticker names
+    :param store_location: String => root directory on hard drive to save output
+    :param folder_name: String => folder name to be created in the directory of store_location
+    :param file_save: Boolean => whether to save the output
+    :param comprehensive: Boolean => whether to perform statement analysis
     """
 
-    def __init__(self, stock_ticker_list, storelocation="D:\Yahoo Finance\Stock Data\\",
-                 foldername='test_folder', filesave=False, comprehensive=False):
-        self.stock_ticker_list = stock_ticker_list
-        self.storelocation = storelocation
-        self.foldername = foldername
-        self.filesave = filesave
+    def __init__(self, tickers, store_location, folder_name, file_save, comprehensive):
+        self.tickers = tickers
+        self.store_location = store_location
+        self.folder_name = folder_name
+        self.file_save = file_save
         self.comprehensive = comprehensive
-        self.ranking = None
-        self.score = None
-        self.my_system = sys.platform
+        self.start_time = strftime("%Y-%m-%d %H.%M.%S")
+        self.logger = Logger(__name__, start_time=self.start_time).get_logger()
 
-        if self.my_system == 'linux':
-            self.separator = "/"
-        elif self.my_system == 'win32':
-            self.separator = "\\"
+    @staticmethod
+    def parallel_runner(class__):
+        class__.run()
 
     def scrapper_start(self):
-        myclass = yf.YFStatistics(self.stock_ticker_list, store_location=self.storelocation,
-                                  folder_name=self.foldername, file_save=self.filesave)
-        myclass.statistics_scrap()
-        trailing_pe_list = myclass._df_downsized.iloc[0, :]
         implied_peg = OrderedDict()
-        self.ranking = myclass._scoring_df
-        self.score = myclass._scoring_dict
 
-        myclass2 = yfs.YFSummary(self.stock_ticker_list, store_location=self.storelocation,
-                                 folder_name=self.foldername, filesave=self.filesave)
-        myclass2.summary_scrap()
+        statistics = YFStatistics(self.tickers, self.store_location, self.folder_name, self.file_save, self.start_time)
+        summary = YFSummary(self.tickers, self.store_location, self.folder_name, self.file_save, self.start_time)
+        MultiThreader.run_thread_pool([statistics, summary], self.parallel_runner, 2)
 
-        # whether comprehensive analysis, comprehensive means including statement analysis
+        ranking = statistics.get_ranking()
+        score = statistics.get_score()
+        ignored_stats = statistics.get_ignored_stats()
+        summary_data = summary.get_summary()
+        trailing_pe_list = statistics.get_downsized_df().iloc[0, :]
+
         if self.comprehensive:
-            cagr_all = yfst.statements(self.stock_ticker_list, folder_name=self.foldername,
-                                       file_save=self.filesave, store_location=self.storelocation)
+            statement = YFStatement(self.tickers, self.store_location, self.folder_name, self.file_save, statement_type="IS", start_time=self.start_time)
+            statement.run()
+            cagr, cagr_compare = CAGR(statements=statement.get_statement(), statement_type="IS",start_time=self.start_time).run()
 
-            cagr = cagr_all[0]
-            cagr_compare = cagr_all[1]
-            cagr_list = list(cagr.columns)
-            for ticker in cagr.columns:
-                if trailing_pe_list[ticker] == 'N/A' or cagr.iloc[0, cagr_list.index(ticker)] == 'N/A':
+            for ticker in self.tickers:
+                if trailing_pe_list[ticker] == "N/A" or cagr.get(ticker) == "N/A":
                     implied_peg[ticker] = 0
                 else:
-                    implied_peg[ticker] = float(trailing_pe_list[ticker]) / cagr.iloc[0, cagr_list.index(ticker)] / 100
+                    implied_peg[ticker] = float(trailing_pe_list[ticker]) / cagr.get(ticker) / 100
 
-            if self.filesave:
-                cagr_compare.to_csv(self.storelocation + self.foldername + self.separator + 'CAGR_COMPARE.csv')
-
+            if self.file_save:
+                DataWriter(self.logger).csv_writer(self.store_location, self.folder_name,"CAGR_COMPARE.csv", cagr_compare)
         else:
-            for ticker in self.ranking.columns:
+            for ticker in ranking.columns:
                 implied_peg[ticker] = 0
 
-        # print result
-        print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n')
-        mystring = ''
-        ignored_item_string = ''
-        for key, value in zip(self.score.keys(), self.score.values()):
-            col = int(list(myclass2.dataframe.iloc[5:7, :].columns).index(key))
-            mystring += (key + ' Score: ' + str(round(value, 2)) +
-                         ' Trailing PE: ' + trailing_pe_list[key] +
-                         ' Implied PEG: ' + str(implied_peg[key]) + '  Potential: ' +
-                         str(myclass2.dataframe.iloc[5:7, :].iloc[0, col]) +
-                         '  Price Percentile: ' +
-                         str(myclass2.dataframe.iloc[5:7, :].iloc[1, col]) + '\n')
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n")
+        summary_dict = OrderedDict()
+        summary_columns = ["Score", "Trailing PE", "Implied PEG", "Potential", "Price Percentile"]
 
-        if myclass._ignored_stats:
-            for item in myclass._ignored_stats:
-                ignored_item_string += item + ', \n'
+        for ticker, value in zip(score.keys(), score.values()):
+            ticker_data = [round(value, 2), trailing_pe_list[ticker],
+                           implied_peg[ticker], str(summary_data.loc["Growth Potential", ticker]),
+                           str(summary_data.loc["52 Week Percentile", ticker])]
 
-            ignored_item_string += ' has been ignored from the calculation of scores! \n' + ''
-            print(ignored_item_string)
+            summary_dict[ticker] = ticker_data
 
-        print(mystring)
-        print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+        summary_df = DataFrame(summary_dict, index=summary_columns).transpose()
 
-        # Store result
-        result_col = ["Score", "Trailing PE", "Implied PEG", "Potential", "Price Percentile"]
-        result_tickers = list(myclass2.dataframe.columns)
-        result_dict = OrderedDict()
+        print(summary_df)
 
-        # Creating result dictionary
-        for item in result_tickers:
-            result_dict[item] = [round(self.score[item], 2)]
+        if ignored_stats:
+            print("ignored items: {}\n".format(ignored_stats))
 
-        # Appending result dictionary
-        for item in result_tickers:
-            col = int(list(myclass2.dataframe.iloc[5:7, :].columns).index(item))
-            result_dict[item].append(trailing_pe_list[item])                        # Trailing PE
-            result_dict[item].append(implied_peg[item])                             # implied_PEG
-            result_dict[item].append(myclass2.dataframe.iloc[5:7, :].iloc[0, col])  # potential
-            result_dict[item].append(myclass2.dataframe.iloc[5:7, :].iloc[1, col])  # Price percentile
-
-        if self.filesave:
-            result_table = pandas.DataFrame(result_dict,result_col,result_tickers).transpose()
-            result_table.to_csv(self.storelocation + self.foldername + self.separator + 'Score_Summary.csv')
+        print("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
 
-if __name__ == '__main__':
-    my_system = sys.platform
-
+if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
-
     user_input = user_input.replace(' ', '').split(sep=",")
+    config = ConfigReader().get_configurations()
+    general_conf = config.get("general")
 
-    my_user = getpass.getuser()
+    if user_input == [""]:
+        user_input = general_conf.get("symbols")
 
-    if my_system == "linux" or my_system == "darwin":
-        store_location = "/home/" + my_user + "/stock_data/"
-    elif my_system == "win32":
-        store_location = "D:\Yahoo Finance\Stock Data\\"
-
-    mymain = ScrapperApp(user_input, foldername='Retail', comprehensive=True,
-                         filesave=False, storelocation=store_location)
-    mymain.scrapper_start()
+    ScrapperApp(user_input, store_location=general_conf.get("store_location"),
+                folder_name=general_conf.get("folder_name"),
+                file_save=general_conf.get("file_save"), comprehensive=True).scrapper_start()

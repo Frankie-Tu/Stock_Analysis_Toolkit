@@ -1,7 +1,7 @@
-from scrappers2.core.scrapper_abstract import ScrapperAbstract
-from scrappers2.utils.multi_threader import MultiThreader
-from scrappers2.utils.data_writer import DataWriter
-from scrappers2.utils.config_reader import ConfigReader
+from scrappers.core.scrapper_abstract import ScrapperAbstract
+from scrappers.utils.multi_threader import MultiThreader
+from scrappers.utils.data_writer import DataWriter
+from scrappers.utils.config_reader import ConfigReader
 
 import pandas as pd
 from collections import OrderedDict

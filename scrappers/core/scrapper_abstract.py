@@ -1,6 +1,6 @@
-from scrappers2.utils.logger import Logger
-from scrappers2.utils.system_spec import SystemSpec
-from scrappers2.utils.config_reader import ConfigReader
+from scrappers.utils.logger import Logger
+from scrappers.utils.system_spec import SystemSpec
+from scrappers.utils.config_reader import ConfigReader
 
 import requests
 import os
