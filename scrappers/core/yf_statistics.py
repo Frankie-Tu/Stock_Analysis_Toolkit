@@ -124,20 +124,23 @@ class YFStatistics(ScrapperAbstract):
         # Convert all numbers to base of 1, 1M = 1,000,000, 1k = 1,000, 5% = 0.05
         for item in result_dict.values():
 
-            # Making sure we are not altering date values
-            if item[0:3] not in ('Mar', 'May'):
-                for characters in item:
-                    if characters in ('B', 'M', 'k', '%'):
-                        index = val.index(item)
-                        val[index] = val[index].replace(characters, '')
-                        if characters == 'B':
-                            val[index] = str(float(val[index].replace(',', '')) * 1000000000)
-                        elif characters == 'k':
-                            val[index] = str(float(val[index].replace(',', '')) * 1000)
-                        elif characters == 'M':
-                            val[index] = str(float(val[index].replace(',', '')) * 1000000)
-                        elif characters == '%':
-                            val[index] = str(float(val[index].replace(',', '')) / 100)
+            try:
+                # Making sure we are not altering date values
+                if item[0:3] not in ('Mar', 'May'):
+                    for characters in item:
+                        if characters in ('B', 'M', 'k', '%'):
+                            index = val.index(item)
+                            val[index] = val[index].replace(characters, '')
+                            if characters == 'B':
+                                val[index] = str(float(val[index].replace(',', '')) * 1000000000)
+                            elif characters == 'k':
+                                val[index] = str(float(val[index].replace(',', '')) * 1000)
+                            elif characters == 'M':
+                                val[index] = str(float(val[index].replace(',', '')) * 1000000)
+                            elif characters == '%':
+                                val[index] = str(float(val[index].replace(',', '')) / 100)
+            except Exception:
+                self._logger.exception("item {} caused an exception!".format(item))
 
         self._lock.acquire()
         self._logger.debug("{} locked".format(ticker))

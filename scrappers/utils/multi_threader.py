@@ -1,5 +1,7 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 
+import traceback
+
 
 class MultiThreader:
     @staticmethod
@@ -11,9 +13,9 @@ class MultiThreader:
         :return: None
         """
         with ThreadPoolExecutor(max_workers=max_threads) as exe:
-            if len(args) == 0:
-                for thread in threads:
-                    exe.submit(call_func, thread)
-            else:
-                for thread in threads:
-                    exe.submit(call_func, thread, args)
+            futures = [exe.submit(call_func, thread, *args) for thread in threads]
+            for future in futures:
+                try:
+                    future.result()
+                except Exception as e:
+                    traceback.print_tb(e.__traceback__)

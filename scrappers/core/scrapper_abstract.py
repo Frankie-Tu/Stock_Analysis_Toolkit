@@ -38,11 +38,16 @@ class ScrapperAbstract(ABC):
         :return: parsed html
         """
         self._logger.info("Sending request to url: {}".format(url))
-        r = requests.get(url, timeout=1)
 
-        while r.status_code != 200:
-            self._logger.error("Attempt failed with status code: {}. Retrying...".format(r.status_code))
+        try:
             r = requests.get(url, timeout=1)
+
+            while r.status_code != 200:
+                self._logger.error("Attempt failed with status code: {}. Retrying...".format(r.status_code))
+                r = requests.get(url)
+        except requests.exceptions.Timeout:
+            self._logger.error("Attempt timed out, retrying now...")
+            return self.requester(url)
 
         return Soup(r.text, 'html.parser')
 

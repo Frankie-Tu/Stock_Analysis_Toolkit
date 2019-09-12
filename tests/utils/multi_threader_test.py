@@ -17,8 +17,13 @@ def test_func(name):
     print("thread {} finished...".format(name))
 
 
+def test_tb(val):
+    int(val)
+
+
 class MultiThreaderTest(unittest.TestCase):
     def test(self):
         processes = ["p1","p2","p3","p4","p5"]
         MultiThreader.run_thread_pool(processes, test_func_varg, 2, "optional_arg1", "optional_arg2")
         MultiThreader.run_thread_pool(processes, test_func, 2)
+        MultiThreader.run_thread_pool(processes, test_tb, 5)
