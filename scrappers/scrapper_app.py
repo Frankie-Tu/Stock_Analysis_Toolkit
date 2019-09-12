@@ -84,7 +84,9 @@ class ScrapperApp:
         print(summary_df)
 
         if ignored_stats:
-            print("ignored items: {}\n".format(ignored_stats))
+            print("ignored items:")
+            for column in ignored_stats.keys():
+                print("{}: {}".format(column, ignored_stats.get(column)))
 
         print("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 

@@ -35,7 +35,7 @@ class YFStatistics(ScrapperAbstract):
         self._short_date = None  # Place holder, short float dates
         self._scoring_df = None  # Place holder, listing each every single score for each category for all tickers
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
-        self._ignored_stats = []  # place holder, showing all the stats that were ignored in the calculation
+        self._ignored_stats = OrderedDict()  # place holder, showing all the stats that were ignored in the calculation
         self._lock = Lock()
 
     def data_parser(self, ticker):
@@ -210,7 +210,10 @@ class YFStatistics(ScrapperAbstract):
 
         self._target_list = list(filter(lambda x: x not in na_list, value_list))
 
-        self._ignored_stats.extend(na_list)
+        #self._ignored_stats.extend(na_list)
+        if na_list:
+            for item in na_list:
+                self._ignored_stats[item] = list(self._df_downsized.loc[item].where(lambda x: x == "N/A").dropna().index)
 
     def __scoring(self):
         """

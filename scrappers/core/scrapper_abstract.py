@@ -46,7 +46,7 @@ class ScrapperAbstract(ABC):
                 self._logger.error("Attempt failed with status code: {}. Retrying...".format(r.status_code))
                 r = requests.get(url)
         except requests.exceptions.Timeout:
-            self._logger.error("Attempt timed out, retrying now...")
+            self._logger.error("Attempt timed out for url: {}, retrying now...".format(url))
             return self.requester(url)
 
         return Soup(r.text, 'html.parser')
