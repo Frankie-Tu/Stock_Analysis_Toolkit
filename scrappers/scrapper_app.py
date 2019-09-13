@@ -25,14 +25,14 @@ class ScrapperApp:
     :param comprehensive: Boolean => whether to perform statement analysis
     """
 
-    def __init__(self, tickers, store_location, folder_name, file_save, comprehensive):
+    def __init__(self, tickers, store_location, file_save, comprehensive):
         self.tickers = tickers
         self.store_location = store_location
-        self.folder_name = folder_name
         self.file_save = file_save
         self.comprehensive = comprehensive
         self.start_time = strftime("%Y-%m-%d %H.%M.%S")
         self.logger = Logger(__name__, start_time=self.start_time).get_logger()
+        self.config = ConfigReader("application_configurations.json").get_configurations()
 
     @staticmethod
     def parallel_runner(class__):
@@ -41,8 +41,8 @@ class ScrapperApp:
     def scrapper_start(self):
         implied_peg = OrderedDict()
 
-        statistics = YFStatistics(self.tickers, self.store_location, self.folder_name, self.file_save, self.start_time)
-        summary = YFSummary(self.tickers, self.store_location, self.folder_name, self.file_save, self.start_time)
+        statistics = YFStatistics(self.tickers, self.store_location, self.config.get("statistics").get("folder_name"), self.file_save, self.start_time)
+        summary = YFSummary(self.tickers, self.store_location, self.config.get("summary").get("folder_name"), self.file_save, self.start_time)
         MultiThreader.run_thread_pool([statistics, summary], self.parallel_runner, 2)
 
         ranking = statistics.get_ranking()
@@ -52,7 +52,7 @@ class ScrapperApp:
         trailing_pe_list = statistics.get_downsized_df().iloc[0, :]
 
         if self.comprehensive:
-            statement = YFStatement(self.tickers, self.store_location, self.folder_name, self.file_save, statement_type="IS", start_time=self.start_time)
+            statement = YFStatement(self.tickers, self.store_location, self.config.get("statement").get("IS").get("folder_name"), self.file_save, statement_type="IS", start_time=self.start_time)
             statement.run()
             cagr, cagr_compare = CAGR(statements=statement.get_statement(), statement_type="IS",start_time=self.start_time).run()
 
@@ -63,7 +63,7 @@ class ScrapperApp:
                     implied_peg[ticker] = float(trailing_pe_list[ticker]) / cagr.get(ticker) / 100
 
             if self.file_save:
-                DataWriter(self.logger).csv_writer(self.store_location, self.folder_name,"CAGR_COMPARE.csv", cagr_compare)
+                DataWriter(self.logger).csv_writer(self.store_location, "", "CAGR_COMPARE.csv", cagr_compare)
         else:
             for ticker in ranking.columns:
                 implied_peg[ticker] = 0
@@ -101,5 +101,4 @@ if __name__ == "__main__":
         user_input = general_conf.get("symbols")
 
     ScrapperApp(user_input, store_location=general_conf.get("store_location"),
-                folder_name=general_conf.get("folder_name"),
                 file_save=general_conf.get("file_save"), comprehensive=True).scrapper_start()
