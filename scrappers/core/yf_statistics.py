@@ -8,6 +8,7 @@ import pandas as pd
 import scipy.stats as ss
 from threading import Lock
 from time import strftime
+import sys
 import pdb
 
 
@@ -110,6 +111,10 @@ class YFStatistics(ScrapperAbstract):
         except IndexError:
             self._logger.exception("{}: returned html not in expected format".format(ticker))
             raise IndexError
+
+        if len(result_dict) != 59:
+            self._logger.error("expected number of columns: 59, actual number of columns: {}".format(len(result_dict)))
+            sys.exit(1)
 
         # Temp list
         col = []

@@ -82,7 +82,7 @@
         "statistics_section_class_val_measure": "Mb(10px) smartphone_Pend(0px) Pend(20px)",
         "statistics_section_class2": "Pstart(20px) smartphone_Pstart(0px)",
         "td_class": "Fz(s) Fw(500) Ta(end) Pstart(10px) Miw(60px)",
-        "table_class": "table-qsp-stats Mt(10px)"
+        "table_class": "W(100%) Bdcl(c) Mt(10px)"
     },
     "file_names": {
       "data_stats": "Statistics_data.csv",
