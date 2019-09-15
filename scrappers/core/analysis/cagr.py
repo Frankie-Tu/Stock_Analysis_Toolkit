@@ -1,4 +1,3 @@
-from scrappers.core.yf_statement import YFStatement
 from scrappers.utils.logger import Logger
 from scrappers.utils.config_reader import ConfigReader
 
@@ -9,7 +8,9 @@ import pandas as pd
 
 class CAGR:
     """
-    :param args: list[String] => list of ticker names
+    computing compounded annual growth rate between reference year and latest year
+
+    :param statements: dict[ticker: String, Statement: Dataframe]
     :param statement_type: type of statement => IS, BS, CF
     :param start_time: strftime => start time of the application for log timestamp
     """
@@ -21,6 +22,11 @@ class CAGR:
         self._application_logic = ConfigReader(file="application_logic.json").get_configurations().get("cagr")
 
     def __income_statement(self):
+        """
+        returns average of net income and dataframe of cagr for net income, profit and revenue
+
+        :return: [{ticker, average cagr}, dataframe}
+        """
         cagr_avg_dict = OrderedDict()
         cagr_dict = OrderedDict()
         average_income_columns = self._application_logic.get("average_net_income")
@@ -40,10 +46,12 @@ class CAGR:
         return cagr_avg_dict, pd.DataFrame(cagr_dict, index=all_income_columns)
 
     def __cash_flow(self):
-        print("cash_flow")
+        # TODO: add cagr logic for cash flow statement
+        pass
 
     def __balance_sheet(self):
-        print("balance_sheet")
+        # TODO: add cagr logic for balance sheet
+        pass
 
     def run(self):
         cases = {
