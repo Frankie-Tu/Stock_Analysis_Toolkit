@@ -30,7 +30,8 @@ class YFStatement(ScrapperAbstract):
                          file_save=file_save, start_time=start_time, logger_name=__name__)
         self._statement_type = self._application_logic.get("statement").get("statement_type")
         self._statement = statement_type.upper()
-        self._growth_statements = OrderedDict()  # Place holder,
+        self._growth_statements = OrderedDict()
+        self._raw_statements = OrderedDict()
 
     def data_parser(self, ticker):
         """
@@ -84,6 +85,7 @@ class YFStatement(ScrapperAbstract):
         if self._file_save:
             DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, ticker + "_" + self._statement + ".csv", raw_data, statement_growth)
 
+        self._raw_statements[ticker] = raw_data
         self._growth_statements[ticker] = statement_growth
 
         self._lock.release()
@@ -150,13 +152,25 @@ class YFStatement(ScrapperAbstract):
         # parsing data from multiple stock symbols in parallel
         MultiThreader.run_thread_pool(self._tickers, self.data_parser, 15)
 
-    def get_statement(self, *tickers):
+    def get_statement(self, type, *tickers):
+        """
+
+        :param type: growth , raw
+        :param tickers(optional): stock symbol
+        :return:
+        """
+
+        type_mapping = {
+            "growth": self._growth_statements,
+            "raw": self._raw_statements
+        }
+
         if len(tickers) == 0:
-            return self._growth_statements
+            return type_mapping.get(type)
         else:
             return_dict = OrderedDict()
             for ticker in tickers:
-                return_dict[ticker] = self._growth_statements.get(ticker)
+                return_dict[ticker] = type_mapping.get(type).get(ticker)
             return return_dict
 
 
