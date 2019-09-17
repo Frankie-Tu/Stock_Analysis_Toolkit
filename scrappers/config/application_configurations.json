@@ -1,6 +1,6 @@
 {
   "general": {
-    "symbols": ["bns.to","td.to","ry.to","na.to", "bmo.to"],
+    "symbols": ["bns.to","td.to","ry.to","na.to", "bmo.to","cm.to"],
     "store_location": "/home/frankie/repos/Stock_Analysis_Toolkit/tests",
     "file_save": true
   },

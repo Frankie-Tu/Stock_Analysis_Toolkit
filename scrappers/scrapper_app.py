@@ -6,6 +6,7 @@ from scrappers.utils.multi_threader import MultiThreader
 from scrappers.utils.config_reader import ConfigReader
 from scrappers.utils.data_writer import DataWriter
 from scrappers.utils.logger import Logger
+from scrappers.core.analysis.proportion import Proportion
 
 from collections import OrderedDict
 from time import strftime
@@ -55,6 +56,9 @@ class ScrapperApp:
             statement = YFStatement(self.tickers, self.store_location, self.config.get("statement").get("IS").get("folder_name"), self.file_save, statement_type="IS", start_time=self.start_time)
             statement.run()
             cagr, cagr_compare = CAGR(statements=statement.get_statement("growth"), statement_type="IS",start_time=self.start_time).run()
+
+            statements = statement.get_statement("raw")
+            Proportion(statements, "IS", self.start_time).run()
 
             for ticker in self.tickers:
                 if trailing_pe_list[ticker] == "N/A" or cagr.get(ticker) == "N/A":
