@@ -215,7 +215,6 @@ class YFStatistics(ScrapperAbstract):
 
         self._target_list = list(filter(lambda x: x not in na_list, value_list))
 
-        #self._ignored_stats.extend(na_list)
         if na_list:
             for item in na_list:
                 self._ignored_stats[item] = list(self._df_downsized.loc[item].where(lambda x: x == "N/A").dropna().index)

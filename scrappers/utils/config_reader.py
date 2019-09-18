@@ -12,6 +12,7 @@ class ConfigReader:
     read user configurations
 
     :param start_time: strftime => start time of the application for log timestamp
+    :param file: string => name of the configuration file in config/
     """
     def __init__(self, start_time=strftime("%Y-%m-%d %H.%M.%S"), file="application_configurations.json"):
         self._logger = Logger(name=__name__, start_time=start_time).get_logger()

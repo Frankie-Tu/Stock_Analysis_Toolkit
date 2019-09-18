@@ -1,12 +1,11 @@
 from scrappers.core.scrapper_abstract import ScrapperAbstract
+from scrappers.core.analysis.growth_analysis import YoYGrowth
 from scrappers.utils.multi_threader import MultiThreader
 from scrappers.utils.data_writer import DataWriter
 from scrappers.utils.config_reader import ConfigReader
 
 import pandas as pd
 from collections import OrderedDict
-import numpy as np
-import math
 from time import strftime
 
 
@@ -77,7 +76,7 @@ class YFStatement(ScrapperAbstract):
             raise IndexError
 
         raw_data = pd.DataFrame(result_list, index=row_names, columns=date_list)
-        statement_growth = self.__growth_calculation(raw_data)
+        statement_growth = YoYGrowth.growth_calculation(raw_data)
 
         self._lock.acquire()
         self._logger.debug("{} locked".format(ticker))
@@ -91,63 +90,6 @@ class YFStatement(ScrapperAbstract):
         self._lock.release()
         self._logger.debug("{} unlocked".format(ticker))
 
-    @staticmethod
-    def __growth_calculation(raw_data):
-        """
-        help calculating yoy growth for each item on the statement
-        :param raw_data: raw statement data: Pandas.DataFrame
-        :return: growth_statement: Pandas.DataFrame
-        """
-        item_name_list = list(raw_data.index)
-        percentage_list_result = []
-
-        for r in range(raw_data.shape[0]):
-            percentage_list = []
-
-            # loop to calculate YOY growth rate
-            for item in [-3, -2, -1]:
-                # if num2 is negative and num 1 none zero
-                if raw_data.iloc[r, item] < 0 and raw_data.iloc[r, item - 1] != 0:
-                    num2 = raw_data.iloc[r, item - 1]
-                    num1 = raw_data.iloc[r, item]
-                    percentage_list.append((num2 - num1) / np.abs(num1))
-                # if num2 is positive and num1 none zero
-                elif raw_data.iloc[r, item] > 0 and raw_data.iloc[r, item - 1] != 0:
-                    num2 = raw_data.iloc[r, item - 1]
-                    num1 = raw_data.iloc[r, item]
-                    percentage_list.append((num2 - num1) / num1)
-                # case where num1 or num2 is zero, append 0
-                else:
-                    percentage_list.append(0)
-            percentage_list = percentage_list[::-1]
-
-            # CAGR
-            beg_year_value = raw_data.iloc[r, 3]
-            end_year_value = raw_data.iloc[r, 0]
-            # When this is the case, we do -(result)
-            if beg_year_value < 0 and end_year_value != 0:
-                if end_year_value / beg_year_value > 0:
-                    cagr = -(math.pow(end_year_value / beg_year_value, 1 / 3) - 1)
-                elif end_year_value / beg_year_value < 0:
-                    cagr = -(-math.pow(abs(end_year_value / beg_year_value), 1 / 3) - 1)
-            # when ths is the case, we do (result)
-            elif beg_year_value > 0 and end_year_value != 0:
-                if end_year_value / beg_year_value > 0:
-                    cagr = math.pow(end_year_value / beg_year_value, 1 / 3) - 1
-                elif end_year_value / beg_year_value < 0:
-                    cagr = -math.pow(abs(end_year_value / beg_year_value), 1 / 3) - 1
-
-            else:
-                cagr = 0
-
-            percentage_list.append(cagr)
-            percentage_list_result.append(percentage_list)
-
-        dates = list(raw_data.columns)[2::-1]
-        dates.append('CAGR')
-
-        return pd.DataFrame(percentage_list_result, index=item_name_list, columns=dates)
-
     def run(self):
         # parsing data from multiple stock symbols in parallel
         MultiThreader.run_thread_pool(self._tickers, self.data_parser, 15)
@@ -156,7 +98,7 @@ class YFStatement(ScrapperAbstract):
         """
 
         :param type: growth , raw
-        :param tickers(optional): stock symbol
+        :param tickers: (optional) => stock symbol
         :return:
         """
 
