@@ -3,8 +3,6 @@ from scrappers.utils.system_spec import SystemSpec
 from scrappers.utils.config_reader import ConfigReader
 
 import requests
-import os
-import sys
 from bs4 import BeautifulSoup as Soup
 from abc import ABC, abstractmethod
 from threading import Lock

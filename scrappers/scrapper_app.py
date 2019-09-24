@@ -1,11 +1,12 @@
 from scrappers.core.yf_statement import YFStatement
 from scrappers.core.yf_summary import YFSummary
 from scrappers.core.yf_statistics import YFStatistics
-from scrappers.core.analysis.cagr import CAGR
+from scrappers.core.analysis.growth_analysis import CAGR, YoYGrowth
 from scrappers.utils.multi_threader import MultiThreader
 from scrappers.utils.config_reader import ConfigReader
 from scrappers.utils.data_writer import DataWriter
 from scrappers.utils.logger import Logger
+from scrappers.core.analysis.proportion import Proportion
 
 from collections import OrderedDict
 from time import strftime
@@ -54,7 +55,10 @@ class ScrapperApp:
         if self.comprehensive:
             statement = YFStatement(self.tickers, self.store_location, self.config.get("statement").get("IS").get("folder_name"), self.file_save, statement_type="IS", start_time=self.start_time)
             statement.run()
-            cagr, cagr_compare = CAGR(statements=statement.get_statement(), statement_type="IS",start_time=self.start_time).run()
+            cagr, cagr_compare = CAGR(statements=statement.get_statement("growth"), statement_type="IS",start_time=self.start_time).run()
+
+            statements = statement.get_statement("raw")
+            Proportion(statements, "IS", self.start_time).run()
 
             for ticker in self.tickers:
                 if trailing_pe_list[ticker] == "N/A" or cagr.get(ticker) == "N/A":
@@ -90,6 +94,9 @@ class ScrapperApp:
 
         print("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
+        if self.file_save:
+            DataWriter(self.logger).csv_writer(self.store_location, "", "SCORE_COMPARE.csv", summary_df)
+
 
 if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
@@ -98,7 +105,7 @@ if __name__ == "__main__":
     general_conf = config.get("general")
 
     if user_input == [""]:
-        user_input = general_conf.get("symbols")
+        user_input = general_conf.get("symbols")[0]
 
     ScrapperApp(user_input, store_location=general_conf.get("store_location"),
                 file_save=general_conf.get("file_save"), comprehensive=True).scrapper_start()

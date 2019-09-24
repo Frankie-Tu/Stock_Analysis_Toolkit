@@ -11,15 +11,15 @@ class DataWriter:
         self._logger = logger
         self._separator = SystemSpec().get_separator()
 
-    def csv_writer(self, main_dir, sub, file_name, dataframe_, *dataframes):
+    def csv_writer(self, main_dir, sub, file_name, *dataframes, **dataframes_dict):
         """
         Used to write dataframe to csv file on hard drive
 
         :param main_dir: root directory
         :param sub: sub structure
         :param file_name: name of the csv
-        :param dataframe_: dataframe to be written to hard drive
-        :param dataframes: other dataframes to be appended
+        :param dataframes: dataframes
+        :param dataframes_dict: dict{ticker, dataframe}
         :return: None
         """
         full_path = main_dir + self._separator + sub
@@ -33,23 +33,22 @@ class DataWriter:
                 self._logger.exception("Please check if you have permission to {}".format(full_path))
                 sys.exit(1)
 
-        if len(dataframes) == 0:
+        if len(dataframes) != 0:
             try:
                 self._logger.info("Saving dataframe to path {}".format(full_path + self._separator + file_name))
-                dataframe_.to_csv(full_path + self._separator + file_name)
+                with open(full_path + self._separator + file_name, mode='w') as file:
+                    for df in dataframes:
+                        file.write("\n")
+                        df.to_csv(file, header=True)
             except IOError:
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))
-        else: # multiple dfs passed in, appending mode
+
+        if len(dataframes_dict.keys()) != 0:
             try:
+                self._logger.info("Saving dataframe to path {}".format(full_path + self._separator + file_name))
                 with open(full_path + self._separator + file_name, mode='w') as file:
-                    self._logger.info("Saving dataframe to path {}".format(full_path + self._separator + file_name))
-                    dataframe_.to_csv(file)
-
-                for df in dataframes:
-                    with open(full_path + self._separator + file_name, mode='a') as file:
-                        file.write("\n")
-                        self._logger.info("Appending dataframe to path {}".format(full_path + self._separator + file_name))
-                        df.to_csv(file, header=True)
-
+                    for ticker in dataframes_dict.keys():
+                        file.write("\n{}\n".format(ticker))
+                        dataframes_dict.get(ticker).to_csv(file, header=True)
             except IOError:
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))

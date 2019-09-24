@@ -7,7 +7,7 @@ from collections import OrderedDict
 import pandas as pd
 import re
 from time import strftime
-from pdb import set_trace
+
 
 class YFSummary(ScrapperAbstract):
     """

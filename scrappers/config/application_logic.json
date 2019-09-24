@@ -108,5 +108,22 @@
       "Net Income From Continuing Ops",
       "Net Income Applicable To Common Shares"
     ]
+  },
+  "proportion": {
+    "agg": "Total Revenue",
+    "plus": [
+      "Gross Profit",
+      "Operating Income or Loss",
+      "Earnings Before Interest and Taxes",
+      "Income Before Tax",
+      "Net Income From Continuing Ops",
+      "Net Income",
+      "Net Income Applicable To Common Shares"
+    ],
+    "minus": [
+      "Cost of Revenue",
+      "Total Operating Expenses",
+      "Interest Expense"
+    ]
   }
 }
