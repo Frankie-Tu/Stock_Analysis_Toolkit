@@ -145,7 +145,7 @@ class YFStatistics(ScrapperAbstract):
                             elif characters == '%':
                                 val[index] = str(float(val[index].replace(',', '')) / 100)
             except Exception:
-                self._logger.exception("item {} caused an exception!".format(item))
+                self._logger.exception("item {} caused an exception during conversion!".format(item))
 
         self._lock.acquire()
         self._logger.debug("{} locked".format(ticker))
@@ -190,8 +190,8 @@ class YFStatistics(ScrapperAbstract):
         # Class Attributes that are important to keep
         important_item = self._application_logic.get("important_item")
         important_item.extend(['Shares Short ' + self._short_date[0],
-                          'Short Ratio ' + self._short_date[1],
-                          'Shares Short ' + self._short_date[2]])
+                               'Short Ratio ' + self._short_date[1],
+                               'Shares Short ' + self._short_date[2]])
 
         self._df_downsized = self._dataframe.filter(important_item, axis=0)
 
@@ -250,7 +250,7 @@ class YFStatistics(ScrapperAbstract):
 
         self.__target_rows(low_values)
 
-        # Appending Score to mydict
+        # rank items being targeted and without N/A fields
         for value in self._target_list:
             scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
             # Append to ranking table
@@ -278,10 +278,11 @@ class YFStatistics(ScrapperAbstract):
 
         for value in self._target_list:
             for item, num in zip(list(self._df_downsized.columns), list(self._df_downsized.loc[value, :].values)):
+                # add one point if the number positive, minus one point if negative
                 if float(num) >= 0:
-                    mydict[item] = mydict[item] + 0.33
+                    mydict[item] = mydict[item] + 1
                 else:
-                    mydict[item] = mydict[item] - 0.25
+                    mydict[item] = mydict[item] - 1
 
         self._scoring_df = pd.DataFrame(mydict2, index=self._df_downsized.columns).transpose()
 
