@@ -23,7 +23,7 @@ class ConfigReader:
     def get_configurations(self):
         try:
             with open(self.configurations) as file:
-                self._logger.info("reading configurations from {}".format(self.configurations))
+                self._logger.debug("reading configurations from {}".format(self.configurations))
                 data = json.load(file)
                 return data
         except FileNotFoundError:

@@ -43,7 +43,10 @@ class Logger:
 
         logger = logging.getLogger(self._name)
         logger.addHandler(handler)
-        logger.info("Logger created")
+        logger.debug("Logger created")
         logger.debug("Logger type: {}".format(type(logger)))
-        logger.info("Log path: {}, mode: {}".format(log_file, self._file_mode))
+
+        if self._name == "__main__":
+            logger.info("Log path: {}, mode: {}".format(log_file, self._file_mode))
+
         return logger

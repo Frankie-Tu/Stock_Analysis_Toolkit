@@ -11,16 +11,15 @@ from time import strftime
 
 class YFSummary(ScrapperAbstract):
     """
-    Note: Scrap data from Summary Tab
-
-    Please input a list array of stock tickers you wish to scrap.
-    This Class scraps data off Yahoo Finance for the tickers selected.
+    Scrap data from Summary Tab off Yahoo Finance for the given array of stock symbols passed in
 
     :param args: list[String] => list of ticker names
     :param store_location: String => root directory on hard drive to save output
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
     :param start_time: strftime => start time of the application for log timestamp
+
+    :return: None
     """
 
     def __init__(self, args, store_location, folder_name, file_save, start_time=strftime("%Y-%m-%d %H.%M.%S")):
@@ -30,8 +29,7 @@ class YFSummary(ScrapperAbstract):
 
     def data_parser(self, ticker):
         """
-        Method is used by YFSummary Class to parse html
-        data from Summary tab on Yahoo Finance.
+        parse html to dataframe
 
         :return: None
         """
@@ -40,7 +38,6 @@ class YFSummary(ScrapperAbstract):
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "?p=" + ticker
 
         try:
-            # fetch data
             self._logger.info("{}: Sending requests...".format(ticker))
             my_soup = self.requester(url)
             all_html = my_soup.find_all('table', {'class': "W(100%)"})
@@ -71,7 +68,6 @@ class YFSummary(ScrapperAbstract):
             self._logger.exception("{}: returned html not in expected format".format(ticker))
             raise IndexError
 
-        # Append result
         fifty2_week_range_high, fifty2_week_range_low, current_price = list(map(lambda x: x.replace(',', ''), [fifty2_week_range_high, fifty2_week_range_low, current_price]))
 
         result_dict['52 Week Low'] = float(fifty2_week_range_low)
@@ -85,7 +81,7 @@ class YFSummary(ScrapperAbstract):
         result_dict['Change %'] = float(change)
         result_dict['Current Price'] = float(current_price)
 
-        # Based on target
+        # Based on  estimates provided by analysts and compare that to the current stock price
         self._logger.info('{}: Calculating growth potential and current price percentile'.format(ticker))
         result_dict['Growth Potential'] = float(result_dict['1y Target Est']) / float(result_dict['Current Price']) - 1
         result_dict['52 Week Percentile'] = (float(result_dict['Current Price']) - float(result_dict['52 Week Low'])) / \
@@ -94,7 +90,7 @@ class YFSummary(ScrapperAbstract):
         col = []
         val = []
 
-        # Transfer info from result_dict to col and val list
+        # Transfer data from result_dict to col and val list
         for key, value in zip(result_dict.keys(), result_dict.values()):
             col.append(key)
             val.append(round(value, 4))

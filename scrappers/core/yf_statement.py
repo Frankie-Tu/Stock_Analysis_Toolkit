@@ -11,10 +11,7 @@ from time import strftime
 
 class YFStatement(ScrapperAbstract):
     """
-    Note: Scrap data from Financial tab
-
-    Please input a list of stock tickers you wish to scrap.
-    This class scraps data off Yahoo Finance for the tickers selected
+    Scrap data from Statement Tab off Yahoo Finance for the given array of stock symbols passed in for the given statement type
 
     :param args: list[String] => list of ticker names
     :param store_location: String => root directory on hard drive to save output
@@ -49,7 +46,6 @@ class YFStatement(ScrapperAbstract):
               "/" + self._statement_type[self._statement] + "?p=" + ticker
 
         try:
-            # fetch data
             self._logger.info("Sending requests for {}...".format(ticker))
             all_html = self.requester(url).find_all('table', {'class': 'Lh(1.7) W(100%) M(0)'})[0].\
                 find_all(True, {'class': ['Bdbw(1px) Bdbc($c-fuji-grey-c) Bdbs(s) H(36px)', 'Bdbw(0px)! H(36px)']})
@@ -64,7 +60,6 @@ class YFStatement(ScrapperAbstract):
             for td in td_list[1:]:
                 item_dict[td[0].text] = list(map(lambda x: x.text, td[1:]))
 
-            # data cleaning
             row_names = list(filter(lambda x: item_dict[x], item_dict.keys()))
             result_list = []
 
@@ -96,8 +91,7 @@ class YFStatement(ScrapperAbstract):
 
     def get_statement(self, type, *tickers):
         """
-
-        :param type: growth , raw
+        :param type: growth , raw => growth(yoy%) , raw (raw numbers)
         :param tickers: (optional) => stock symbol
         :return:
         """
@@ -136,7 +130,7 @@ if __name__ == "__main__":
     general_conf = config.get("general")
 
     if user_input == [""]:
-        user_input = general_conf.get("symbols")
+        user_input = general_conf.get("symbols")[0]
 
     YFStatement(user_input, store_location=general_conf.get("store_location"),
                 folder_name=config.get("statement").get(user_input2).get("folder_name"),

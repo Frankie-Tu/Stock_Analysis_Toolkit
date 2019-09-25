@@ -1,7 +1,7 @@
 from scrappers.core.yf_statement import YFStatement
 from scrappers.core.yf_summary import YFSummary
 from scrappers.core.yf_statistics import YFStatistics
-from scrappers.core.analysis.growth_analysis import CAGR, YoYGrowth
+from scrappers.core.analysis.growth_analysis import CAGR
 from scrappers.utils.multi_threader import MultiThreader
 from scrappers.utils.config_reader import ConfigReader
 from scrappers.utils.data_writer import DataWriter
@@ -58,7 +58,7 @@ class ScrapperApp:
             cagr, cagr_compare = CAGR(statements=statement.get_statement("growth"), statement_type="IS",start_time=self.start_time).run()
 
             statements = statement.get_statement("raw")
-            Proportion(statements, "IS", self.start_time).run()
+            Proportion(statements, "IS", self.file_save, self.start_time).run()
 
             for ticker in self.tickers:
                 if trailing_pe_list[ticker] == "N/A" or cagr.get(ticker) == "N/A":

@@ -14,35 +14,33 @@ import pdb
 
 class YFStatistics(ScrapperAbstract):
     """
-    Scraps data from Statistics Tab.
-    Please input a list of stock tickers you wish to scrap.
-    This Class scraps data off Yahoo Finance for the
-    tickers selected.
+    Scrap data from Statistics Tab off Yahoo Finance for the given array of stock symbols passed in
 
     :param args: list[String] => list of ticker names
     :param store_location: String => root directory on hard drive to save output
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
     :param start_time: strftime => start time of the application for log timestamp
+
+    :return None
     """
 
     def __init__(self, args, store_location, folder_name, file_save, start_time=strftime("%Y-%m-%d %H.%M.%S")):
         super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
                          file_save=file_save, start_time=start_time, logger_name=__name__)
         self._application_logic = self._application_logic.get("statistics")
-        self._dataframe = None  # Place holder, all stats
+        self._dataframe = None  # Place holder, original df
         self._df_downsized = None  # Place holder, downsized df
-        self._target_list = None  # Place holder, row item targets
+        self._target_list = None  # Place holder, name of the items being targeted as important
         self._short_date = None  # Place holder, short float dates
-        self._scoring_df = None  # Place holder, listing each every single score for each category for all tickers
+        self._scoring_df = None  # Place holder, listing score for each category for all tickers
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
         self._ignored_stats = OrderedDict()  # place holder, showing all the stats that were ignored in the calculation
         self._lock = Lock()
 
     def data_parser(self, ticker):
         """
-        Method is used by YFStatistics Class to parse html
-        data from Statistics tab on Yahoo Finance. Supports multi-threaded operation
+        parse html to dataframe
 
         :param ticker: stock ticker symbol
         :return: None
@@ -58,13 +56,11 @@ class YFStatistics(ScrapperAbstract):
             :return: None
             """
 
-            # Temporary list
-            mylist = []
-            for item in data:
-                mylist.extend(item.find_all('tr'))
+            temp_list = []
+            for td in data:
+                temp_list.extend(td.find_all('tr'))
 
-            # Dumping results into result dictionary. Both key and value.
-            for item, num in zip(mylist, mylist):
+            for item, num in zip(temp_list, temp_list):
                 result_dict[item.span.text] = num.find_all('td', {'class': class_name})[0].text
 
         result_dict = OrderedDict()
@@ -120,7 +116,6 @@ class YFStatistics(ScrapperAbstract):
         col = []
         val = []
 
-        # Get all keys into column and values into values from the result dictionary
         for colnames, value in zip(result_dict.keys(), result_dict.values()):
             col.append(colnames)
             val.append(value)
@@ -150,7 +145,7 @@ class YFStatistics(ScrapperAbstract):
         self._lock.acquire()
         self._logger.debug("{} locked".format(ticker))
 
-        # test to see if dataframe dict exists, if it doesn't create dictionary, else append.
+        # if self._dataframe already exists, append only
         if isinstance(None, type(self._dataframe)):
             self._dataframe = pd.DataFrame(val, col, columns=[ticker])
         else:
@@ -164,7 +159,6 @@ class YFStatistics(ScrapperAbstract):
         # parsing data for multiple stock symbols in parallel
         MultiThreader.run_thread_pool(self._tickers, self.data_parser, 15)
 
-        # write to csv if requested
         if self._file_save:
             DataWriter(self._logger).csv_writer(self._store_location, self._folder_name,
                                                 self._application_logic.get("file_names").get("data_stats"), self._dataframe)
@@ -180,10 +174,7 @@ class YFStatistics(ScrapperAbstract):
 
     def __downsize(self):
         """
-        Method used within the YFStatistics Class.
-
-        Purpose: This downsize the dataset to more important
-        fundamentals and save as abstract-data.csv
+        This method downsizes the dataset to retain only the most important items and save as abstract-data.csv if self.file_save is true
 
         :return: None
         """
@@ -195,17 +186,13 @@ class YFStatistics(ScrapperAbstract):
 
         self._df_downsized = self._dataframe.filter(important_item, axis=0)
 
-        # write to csv if requested
         if self._file_save:
             DataWriter(self._logger).csv_writer(self._store_location, self._folder_name,
                                                 self._application_logic.get("file_names").get("data_stats_abstract"), self._df_downsized)
 
     def __target_rows(self, value_list):
         """
-        Method is not meant to be called directly by the user.
-        By default, this method is called by method scoring(self)
-
-        Updates self.target_list during every call
+        determine which rows contain N/A and should be excluded during scoring
 
         :param value_list: list[String] => list of column names being targeted
         :return: None
@@ -221,17 +208,17 @@ class YFStatistics(ScrapperAbstract):
 
     def __scoring(self):
         """
-        This method returns the final score for each stock based on
+        This method calculates final score for each stock based on
         ranking of stocks in each of the categories
         """
 
+        final_score = OrderedDict()
+
         # create scorecard, initialize
-        mydict = OrderedDict()
-
         for item in self._tickers:
-            mydict[item] = 0
+            final_score[item] = 0
 
-        mydict2 = OrderedDict()
+        category_rank = OrderedDict()
 
         # all values lower the better
         low_values = self._application_logic.get("low_values")
@@ -242,10 +229,8 @@ class YFStatistics(ScrapperAbstract):
         # Secondary Fundamentals
         secondary_values = self._application_logic.get("secondary_values")
 
-        # All important Fundamentals:
         all_values = low_values + high_values + secondary_values
 
-        # Multipliers
         multiplier = self._application_logic.get("multiplier")
 
         self.__target_rows(low_values)
@@ -254,24 +239,22 @@ class YFStatistics(ScrapperAbstract):
         for value in self._target_list:
             scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
             # Append to ranking table
-            mydict2[value] = scoreboard
-            multiplier_lookup = value
+            category_rank[value] = scoreboard
             for item, num in zip(list(self._df_downsized.columns), range(len(self._df_downsized.columns))):
-                mydict[item] = (mydict[item] + len(self._df_downsized.columns) - scoreboard[num] + 1) * \
-                               multiplier[multiplier_lookup]
+                final_score[item] = (final_score[item] + len(self._df_downsized.columns) - scoreboard[num] + 1) * \
+                               multiplier[value]
 
         self.__target_rows(high_values)
 
         for value in self._target_list:
             scoreboard = ss.rankdata(self._df_downsized.loc[value, :].astype(float), method='dense')
-            mydict2[value] = scoreboard
+            category_rank[value] = scoreboard
 
             # invert ranking
-            mydict2[value] = len(self._df_downsized.columns) + 1 - mydict2[value]
+            category_rank[value] = len(self._df_downsized.columns) + 1 - category_rank[value]
 
-            multiplier_lookup = value
             for item, num in zip(list(self._df_downsized.columns), range(len(self._df_downsized.columns))):
-                mydict[item] = (mydict[item] + scoreboard[num]) * multiplier[multiplier_lookup]
+                final_score[item] = (final_score[item] + scoreboard[num]) * multiplier[value]
 
         # Secondary fundamentals, check if value positive
         self.__target_rows(secondary_values)
@@ -280,16 +263,16 @@ class YFStatistics(ScrapperAbstract):
             for item, num in zip(list(self._df_downsized.columns), list(self._df_downsized.loc[value, :].values)):
                 # add one point if the number positive, minus one point if negative
                 if float(num) >= 0:
-                    mydict[item] = mydict[item] + 1
+                    final_score[item] = final_score[item] + 1
                 else:
-                    mydict[item] = mydict[item] - 1
+                    final_score[item] = final_score[item] - 1
 
-        self._scoring_df = pd.DataFrame(mydict2, index=self._df_downsized.columns).transpose()
+        self._scoring_df = pd.DataFrame(category_rank, index=self._df_downsized.columns).transpose()
 
         if self._file_save:
             DataWriter(self._logger).csv_writer(self._store_location, self._folder_name, self._application_logic.get("file_names").get("ranking_info"),
                                                 self._scoring_df, self._df_downsized.loc[all_values, :])
-        self._scoring_dict = OrderedDict(sorted(mydict.items(), key=lambda x: x[1], reverse=True))
+        self._scoring_dict = OrderedDict(sorted(final_score.items(), key=lambda x: x[1], reverse=True))
 
     def get_score(self):
         return self._scoring_dict
