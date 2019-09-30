@@ -7,6 +7,8 @@ from scrappers.utils.config_reader import ConfigReader
 import pandas as pd
 from collections import OrderedDict
 from time import strftime
+import re
+from pdb import set_trace
 
 
 class YFStatement(ScrapperAbstract):
@@ -37,7 +39,7 @@ class YFStatement(ScrapperAbstract):
 
         # converts "-" to 0 and str to float, eg '123,456.789' to '123456.789'
         def convert(value2):
-            if value2 == '-':
+            if value2 in ['-', ""]:
                 return 0
             else:
                 return float(value2.replace(',', ''))
@@ -47,18 +49,22 @@ class YFStatement(ScrapperAbstract):
 
         try:
             self._logger.info("Sending requests for {}...".format(ticker))
-            all_html = self.requester(url).find_all('table', {'class': 'Lh(1.7) W(100%) M(0)'})[0].\
-                find_all(True, {'class': ['Bdbw(1px) Bdbc($c-fuji-grey-c) Bdbs(s) H(36px)', 'Bdbw(0px)! H(36px)']})
-
-            td_list = [tr.find_all("td") for tr in all_html]
+            all_html = self.requester(url).find_all("div", {"class": "M(0) Mb(10px) Whs(n) BdEnd Bdc($seperatorColor) D(itb)"})[0]. \
+                find_all("div", {"class": ["D(tbr) C($primaryColor)", "D(tbr) fi-row Bgc($hoverBgColor):h"]})
 
             # Date extraction
-            date_list = [date.text for date in td_list[0][1:]]
+            date_list = [date.text for date in all_html[0].find_all("div", {"class": re.compile(
+                "^D\(ib\) Fw\(b\) Ta\(end\) Pstart\(6px\) Pend\(4px\) Py\(6px\) Bxz\(bb\) BdB Bdc\(\$seperatorColor\) Miw\(100px\) Miw\(156px\)")})]
+
+            item_dict = OrderedDict()
 
             # Grab item name and its corresponding values from each year and assign into Ordered Dictionary
-            item_dict = OrderedDict()
-            for td in td_list[1:]:
-                item_dict[td[0].text] = list(map(lambda x: x.text, td[1:]))
+            for row in all_html[1:]:
+                values = row.find_all("div",
+                                      {"class":
+                                           re.compile("^D\(tbc\) Ta\(end\) Pstart\(6px\) Pend\(4px\) Bxz\(bb\) Py\(8px\) BdB Bdc\(\$seperatorColor\) Miw\(100px\) Miw\(156px\)")})
+
+                item_dict[row.span.text] = list(map(lambda x: x.text, values))
 
             row_names = list(filter(lambda x: item_dict[x], item_dict.keys()))
             result_list = []
@@ -71,6 +77,7 @@ class YFStatement(ScrapperAbstract):
             raise IndexError
 
         raw_data = pd.DataFrame(result_list, index=row_names, columns=date_list)
+
         statement_growth = YoYGrowth.growth_calculation(raw_data)
 
         self._lock.acquire()
