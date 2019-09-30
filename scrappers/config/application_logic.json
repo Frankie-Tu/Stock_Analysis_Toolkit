@@ -99,14 +99,14 @@
   },
   "cagr": {
     "average_net_income": [
-      "Net Income From Continuing Ops",
-      "Net Income Applicable To Common Shares"
+      "Income from Continuing Operations",
+      "Net Income available to common shareholders"
     ],
     "all_income": [
       "Total Revenue",
       "Gross Profit",
-      "Net Income From Continuing Ops",
-      "Net Income Applicable To Common Shares"
+      "Income from Continuing Operations",
+      "Net Income available to common shareholders"
     ]
   },
   "proportion": {
