@@ -58,11 +58,7 @@ class ScrapperApp:
             cagr, cagr_compare = CAGR(statements=statement.get_statement("growth"), statement_type="IS",start_time=self.start_time).run()
 
             statements = statement.get_statement("raw")
-<<<<<<< HEAD
-            Proportion(statements, "IS", self.file_save, self.start_time).run()
-=======
             #Proportion(statements, "IS", self.start_time).run()
->>>>>>> master
 
             for ticker in self.tickers:
                 if trailing_pe_list[ticker] == "N/A" or cagr.get(ticker) == "N/A":
