@@ -79,13 +79,13 @@ class YoYGrowth:
         """
         item_name_list = list(raw_data.index)
         percentage_list_result = []
-        year_gap = raw_data.shape[1] - 2
+        year_gap = raw_data.shape[1] - 1
 
         for r in range(raw_data.shape[0]):
             percentage_list = []
 
             # loop to calculate YOY growth rate
-            for item in range(2, raw_data.shape[1]):
+            for item in range(1, raw_data.shape[1]):
                 # if num2 is negative and num 1 none zero
                 if raw_data.iloc[r, item] < 0 and raw_data.iloc[r, item - 1] != 0:
                     num2 = raw_data.iloc[r, item - 1]
@@ -102,8 +102,8 @@ class YoYGrowth:
             percentage_list = percentage_list[::-1]
 
             # CAGR
-            beg_year_value = raw_data.iloc[r, 4]
-            end_year_value = raw_data.iloc[r, 1]
+            beg_year_value = raw_data.iloc[r, 3]
+            end_year_value = raw_data.iloc[r, 0]
             # When this is the case, we do -(result)
             if beg_year_value < 0 and end_year_value != 0:
                 if end_year_value / beg_year_value > 0:
