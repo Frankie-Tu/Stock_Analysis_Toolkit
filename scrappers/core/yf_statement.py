@@ -77,7 +77,6 @@ class YFStatement(ScrapperAbstract):
             raise IndexError
 
         raw_data = pd.DataFrame(result_list, index=row_names, columns=date_list)
-
         statement_growth = YoYGrowth.growth_calculation(raw_data)
 
         self._lock.acquire()
