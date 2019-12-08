@@ -38,13 +38,14 @@ class CAGR:
         for ticker in self.statements.keys():
 
             statement = self.statements.get(ticker).filter(average_income_columns, axis=0)
-            cagr_avg_dict[ticker] = (statement.iloc[0, 3] + statement.iloc[1, 3]) / 2
+            #set_trace()
+            cagr_avg_dict[ticker] = (statement.iloc[0, statement.shape[1] - 1] + statement.iloc[1, statement.shape[1] - 1]) / 2
 
             # CAGR for net income to compare with different tickers
             statement = self.statements.get(ticker).filter(all_income_columns, axis=0)
 
             # append average cagr to list
-            cagr_dict[ticker] = list(statement.iloc[:, 3])
+            cagr_dict[ticker] = list(statement.iloc[:, statement.shape[1] - 1])
 
         return cagr_avg_dict, pd.DataFrame(cagr_dict, index=all_income_columns)
 
