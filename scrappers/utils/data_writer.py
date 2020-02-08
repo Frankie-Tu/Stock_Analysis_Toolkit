@@ -3,11 +3,12 @@ from scrappers.utils.system_spec import SystemSpec
 
 import os
 import sys
+import logging
 from time import strftime
 
 
 class DataWriter:
-    def __init__(self, logger=Logger(__name__, start_time=strftime("%Y-%m-%d %H.%M.%S"))):
+    def __init__(self, logger=logging.getLogger("global")):
         self._logger = logger
         self._separator = SystemSpec().get_separator()
 

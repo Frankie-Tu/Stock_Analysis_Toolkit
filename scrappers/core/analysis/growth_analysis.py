@@ -1,8 +1,7 @@
-from scrappers.utils.logger import Logger
 from scrappers.utils.config_reader import ConfigReader
 
+import logging
 from collections import OrderedDict
-from time import strftime
 import pandas as pd
 import math
 import numpy as np
@@ -15,13 +14,12 @@ class CAGR:
 
     :param statements: dict[ticker: String, Statement: Dataframe]
     :param statement_type: type of statement => IS, BS, CF
-    :param start_time: strftime => start time of the application for log timestamp
+    :param logger: Logger => by default uses global logger from main
     """
-    def __init__(self, statements, statement_type, start_time=strftime("%Y-%m-%d %H.%M.%S")):
+    def __init__(self, statements, statement_type, logger=logging.getLogger("global")):
         self.statements = statements
         self.statement_type = statement_type
-        self.start_time = start_time
-        self._logger = Logger(__name__, start_time=start_time)
+        self._logger = logger
         self._application_logic = ConfigReader(file="application_logic.json").get_configurations().get("cagr")
 
     def __income_statement(self):

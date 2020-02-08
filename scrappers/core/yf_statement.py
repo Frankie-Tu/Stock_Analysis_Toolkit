@@ -3,10 +3,11 @@ from scrappers.core.analysis.growth_analysis import YoYGrowth
 from scrappers.utils.multi_threader import MultiThreader
 from scrappers.utils.data_writer import DataWriter
 from scrappers.utils.config_reader import ConfigReader
+from scrappers.utils.logger import Logger
 
+import logging
 import pandas as pd
 from collections import OrderedDict
-from time import strftime
 import re
 from pdb import set_trace
 
@@ -20,12 +21,11 @@ class YFStatement(ScrapperAbstract):
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
     :param statement_type: type of statement => IS, BS, CF
-    :param start_time: strftime => start time of the application for log timestamp
+    :param logger: Logger => by default uses global logger from main
     """
 
-    def __init__(self, args, store_location, folder_name, file_save, statement_type, start_time=strftime("%Y-%m-%d %H.%M.%S")):
-        super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
-                         file_save=file_save, start_time=start_time, logger_name=__name__)
+    def __init__(self, args, store_location, folder_name, file_save, statement_type, logger=logging.getLogger("global")):
+        super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,file_save=file_save, logger=logger)
         self._statement_type = self._application_logic.get("statement").get("statement_type")
         self._statement = statement_type.upper()
         self._growth_statements = OrderedDict()
@@ -136,8 +136,8 @@ if __name__ == "__main__":
     general_conf = config.get("general")
 
     if user_input == [""]:
-        user_input = general_conf.get("symbols")[0]
+        user_input = general_conf.get("symbols")["group1"]
 
     YFStatement(user_input, store_location=general_conf.get("store_location"),
                 folder_name=config.get("statement").get(user_input2).get("folder_name"),
-                file_save=general_conf.get("file_save"), statement_type=user_input2).run()
+                file_save=general_conf.get("file_save"), statement_type=user_input2, logger=Logger("statement").create_logger()).run()

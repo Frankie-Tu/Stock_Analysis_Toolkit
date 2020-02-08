@@ -8,7 +8,7 @@ from pathlib import Path
 
 class Logger:
 
-    def __init__(self, name, log_level=logging.INFO, log_format="[%(levelname)s] %(asctime)s - %(name)s - %(message)s", file_mode='w', start_time=strftime("%Y-%m-%d %H.%M.%S")):
+    def __init__(self, name, log_level=logging.INFO, log_format="[%(levelname)s] %(asctime)s - %(module)s - %(message)s", file_mode='w', start_time=strftime("%Y-%m-%d %H.%M.%S")):
         self._name = name
         self._log_level = log_level
         self._log_format = log_format
@@ -16,7 +16,7 @@ class Logger:
         self._separator = SystemSpec.get_separator()
         self._start_time = start_time
 
-    def get_logger(self):
+    def create_logger(self):
         """
         generate logger based on config
         :return: logger: logging.Logger

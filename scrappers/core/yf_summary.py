@@ -2,11 +2,12 @@ from scrappers.core.scrapper_abstract import ScrapperAbstract
 from scrappers.utils.multi_threader import MultiThreader
 from scrappers.utils.data_writer import DataWriter
 from scrappers.utils.config_reader import ConfigReader
+from scrappers.utils.logger import Logger
 
+import logging
 from collections import OrderedDict
 import pandas as pd
 import re
-from time import strftime
 
 
 class YFSummary(ScrapperAbstract):
@@ -17,14 +18,12 @@ class YFSummary(ScrapperAbstract):
     :param store_location: String => root directory on hard drive to save output
     :param folder_name: String => folder name to be created in the directory of store_location
     :param file_save: Boolean => whether to save the output
-    :param start_time: strftime => start time of the application for log timestamp
-
+    :param logger: Logger => by default uses global logger from main
     :return: None
     """
 
-    def __init__(self, args, store_location, folder_name, file_save, start_time=strftime("%Y-%m-%d %H.%M.%S")):
-        super().__init__(tickers=args, store_location=store_location, folder_name=folder_name,
-                         file_save=file_save, start_time=start_time, logger_name=__name__)
+    def __init__(self, args, store_location, folder_name, file_save, logger=logging.getLogger("global")):
+        super().__init__(tickers=args, store_location=store_location, folder_name=folder_name, file_save=file_save,logger=logger)
         self._dataframe = None
 
     def data_parser(self, ticker):
@@ -127,7 +126,7 @@ if __name__ == "__main__":
     general_conf = config.get("general")
 
     if user_input == [""]:
-        user_input = general_conf.get("symbols")
+        user_input = general_conf.get("symbols")["group1"]
 
     YFSummary(user_input, store_location=general_conf.get("store_location"),
-                 folder_name=config.get("summary").get("folder_name"), file_save=general_conf.get("file_save")).run()
+                 folder_name=config.get("summary").get("folder_name"), file_save=general_conf.get("file_save"), logger=Logger("summary").create_logger()).run()

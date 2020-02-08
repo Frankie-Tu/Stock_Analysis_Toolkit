@@ -1,9 +1,8 @@
-from scrappers.utils.logger import Logger
 from scrappers.utils.config_reader import ConfigReader
 from scrappers.utils.data_writer import DataWriter
 
+import logging
 from collections import OrderedDict
-from time import strftime
 import pandas as pd
 from pdb import set_trace
 
@@ -16,14 +15,13 @@ class Proportion:
         :param statements: dict[ticker: String, : Statement: Dataframe]
         :param statement_type: type of statement => IS, BS, CF
         :param file_save: Boolean => whether to save the output
-        :param start_time: strftime => start time of the application for log timestamp
     """
 
-    def __init__(self, statements, statement_type, file_save, start_time=strftime("%Y-%m-%d %H.%M.%S")):
+    def __init__(self, statements, statement_type, file_save, logger=logging.getLogger("global")):
         self._statements = statements
         self._statement_type = statement_type
         self._file_save = file_save
-        self._logger = Logger(__name__, start_time=start_time).get_logger()
+        self._logger = logger
         self._application_logic = ConfigReader(file="application_logic.json").get_configurations().get("proportion")
 
         pass

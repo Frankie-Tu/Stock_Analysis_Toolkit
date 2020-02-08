@@ -15,7 +15,7 @@ class ConfigReader:
     :param file: string => name of the configuration file in config/
     """
     def __init__(self, start_time=strftime("%Y-%m-%d %H.%M.%S"), file="application_configurations.json"):
-        self._logger = Logger(name=__name__, start_time=start_time).get_logger()
+        self._logger = Logger(name=__name__, start_time=start_time).create_logger()
         file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         separator = SystemSpec().get_separator()
         self.configurations = file_root + separator + "config" + separator + file

@@ -31,8 +31,8 @@ class ScrapperApp:
         self.store_location = store_location
         self.file_save = file_save
         self.comprehensive = comprehensive
-        self.start_time = strftime("%Y-%m-%d %H.%M.%S")
-        self.logger = Logger(__name__, start_time=self.start_time).get_logger()
+        # #self.start_time =
+        self.logger = Logger("global").create_logger()
         self.config = ConfigReader("application_configurations.json").get_configurations()
 
     @staticmethod
@@ -42,8 +42,8 @@ class ScrapperApp:
     def scrapper_start(self):
         implied_peg = OrderedDict()
 
-        statistics = YFStatistics(self.tickers, self.store_location, self.config.get("statistics").get("folder_name"), self.file_save, self.start_time)
-        summary = YFSummary(self.tickers, self.store_location, self.config.get("summary").get("folder_name"), self.file_save, self.start_time)
+        statistics = YFStatistics(self.tickers, self.store_location, self.config.get("statistics").get("folder_name"), self.file_save)
+        summary = YFSummary(self.tickers, self.store_location, self.config.get("summary").get("folder_name"), self.file_save)
         MultiThreader.run_thread_pool([statistics, summary], self.parallel_runner, 2)
 
         ranking = statistics.get_ranking()
@@ -53,12 +53,12 @@ class ScrapperApp:
         trailing_pe_list = statistics.get_downsized_df().iloc[0, :]
 
         if self.comprehensive:
-            statement = YFStatement(self.tickers, self.store_location, self.config.get("statement").get("IS").get("folder_name"), self.file_save, statement_type="IS", start_time=self.start_time)
+            statement = YFStatement(self.tickers, self.store_location, self.config.get("statement").get("IS").get("folder_name"), self.file_save, statement_type="IS")
             statement.run()
-            cagr, cagr_compare = CAGR(statements=statement.get_statement("growth"), statement_type="IS",start_time=self.start_time).run()
+            cagr, cagr_compare = CAGR(statements=statement.get_statement("growth"), statement_type="IS").run()
 
             statements = statement.get_statement("raw")
-            #Proportion(statements, "IS", self.start_time).run()
+            #Proportion(statements, "IS").run()
 
             for ticker in self.tickers:
                 if trailing_pe_list[ticker] == "N/A" or cagr.get(ticker) == "N/A":
@@ -67,7 +67,7 @@ class ScrapperApp:
                     implied_peg[ticker] = float(trailing_pe_list[ticker]) / cagr.get(ticker) / 100
 
             if self.file_save:
-                DataWriter(self.logger).csv_writer(self.store_location, "", "CAGR_COMPARE.csv", cagr_compare)
+                DataWriter().csv_writer(self.store_location, "", "CAGR_COMPARE.csv", cagr_compare)
         else:
             for ticker in ranking.columns:
                 implied_peg[ticker] = 0
@@ -95,7 +95,7 @@ class ScrapperApp:
         print("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
         if self.file_save:
-            DataWriter(self.logger).csv_writer(self.store_location, "", "SCORE_COMPARE.csv", summary_df)
+            DataWriter().csv_writer(self.store_location, "", "SCORE_COMPARE.csv", summary_df)
 
 
 if __name__ == "__main__":
