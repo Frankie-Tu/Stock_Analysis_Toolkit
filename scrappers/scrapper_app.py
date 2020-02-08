@@ -101,11 +101,11 @@ class ScrapperApp:
 if __name__ == "__main__":
     user_input = input("Please select the ticker you wish you analyze: ")
     user_input = user_input.replace(' ', '').split(sep=",")
-    config = ConfigReader().get_configurations()
+    config = ConfigReader(file="application_configurations.json").get_configurations()
     general_conf = config.get("general")
 
     if user_input == [""]:
-        user_input = general_conf.get("symbols")[0]
+        user_input = general_conf.get("symbols")["group1"]
 
     ScrapperApp(user_input, store_location=general_conf.get("store_location"),
                 file_save=general_conf.get("file_save"), comprehensive=True).scrapper_start()
