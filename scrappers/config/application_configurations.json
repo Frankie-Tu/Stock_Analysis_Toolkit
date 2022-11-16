@@ -4,7 +4,7 @@
       "group1": ["bns.to", "td.to", "ry.to", "na.to", "bmo.to", "cm.to"],
       "group2": ["msft", "aapl"]
     },
-    "store_location": "/home/frankie/repos/Stock_Analysis_Toolkit/tests",
+    "store_location": "../tests/",
     "file_save": true
   },
   "statistics": {

@@ -76,14 +76,6 @@
       "EBITDA",
       "Net Income Avi to Common"
     ],
-    "html_classes": {
-      "statistics_class": "Mstart(a) Mend(a)",
-        "statistics_section_class": "Mb(10px) Pend(20px) smartphone_Pend(0px)",
-        "statistics_section_class_val_measure": "Mb(10px) smartphone_Pend(0px) Pend(20px)",
-        "statistics_section_class2": "Pstart(20px) smartphone_Pstart(0px)",
-        "td_class": "Fz(s) Fw(500) Ta(end) Pstart(10px) Miw(60px)",
-        "table_class": "W(100%) Bdcl(c) Mt(10px)"
-    },
     "file_names": {
       "data_stats": "Statistics_data.csv",
       "data_stats_abstract": "Statistics_data_abstract.csv",

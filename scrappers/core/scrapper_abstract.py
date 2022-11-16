@@ -33,13 +33,17 @@ class ScrapperAbstract(ABC):
         :return: parsed html
         """
         self._logger.info("Sending request to url: {}".format(url))
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
+        }
 
         try:
-            r = requests.get(url, timeout=0.5)
+            r = requests.get(url, timeout=2, headers=headers)
 
             while r.status_code != 200:
                 self._logger.error("Attempt failed with status code: {}. Retrying...".format(r.status_code))
-                r = requests.get(url, timeout=0.5)
+                r = requests.get(url, timeout=2)
         except requests.exceptions.Timeout:
             self._logger.error("Attempt timed out for url: {}, retrying now...".format(url))
             return self.requester(url)

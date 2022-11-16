@@ -11,6 +11,7 @@ import scipy.stats as ss
 from threading import Lock
 import sys
 import pdb
+from typing import Union
 
 
 class YFStatistics(ScrapperAbstract):
@@ -36,6 +37,19 @@ class YFStatistics(ScrapperAbstract):
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
         self._ignored_stats = OrderedDict()  # place holder, showing all the stats that were ignored in the calculation
         self._lock = Lock()
+    
+    def parse_rows(self, body: str) -> Union[list[str], list[str]]:
+        columns = []
+        values = []
+        
+        rows = body.find_all("tr")
+
+        for row in rows:
+            col , val =  row.find_all("td")
+            columns.append(col.span.text)
+            values.append(val.text)
+
+        return columns, values
 
     def data_parser(self, ticker):
         """
@@ -45,70 +59,25 @@ class YFStatistics(ScrapperAbstract):
         :return: None
         """
 
-        def iteration_function(data, class_name):
-            """
-            This is a nested function that iterates through <td> within <tr>.
-            Used only within YFStatistics.data_parser method to populate result_dict OrderedDict
-
-            :param data: html data
-            :param class_name: html class
-            :return: None
-            """
-
-            temp_list = []
-            for td in data:
-                temp_list.extend(td.find_all('tr'))
-
-            for item, num in zip(temp_list, temp_list):
-                result_dict[item.span.text] = num.find_all('td', {'class': class_name})[0].text
-
         result_dict = OrderedDict()
         
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
-        statistics_class = self._application_logic.get("html_classes").get("statistics_class")
-        statistics_section_class = self._application_logic.get("html_classes").get("statistics_section_class")
-        statistics_section_class_val_measure = self._application_logic.get("html_classes").get("statistics_section_class_val_measure")
-        statistics_section_class2 = self._application_logic.get("html_classes").get("statistics_section_class2")
-        td_class = self._application_logic.get("html_classes").get("td_class")
-        table_class = self._application_logic.get("html_classes").get("table_class")
-
+        
         try:
             # fetch data
             self._logger.info("Sending requests for {}...".format(ticker))
-            all_html = self.requester(url).find_all('div', {'class': statistics_class})[0]
-
-            # Valuation Measures:
-            self._logger.info("{}: Computing Valuation Measures...".format(ticker))
-            valuation_measures = all_html \
-                .find_all('div', {'class': statistics_section_class_val_measure})[0] \
-                .find_all("tr")
-
-            for item, num in zip(valuation_measures, valuation_measures):
-                result_dict[item.span.text] = num \
-                    .find_all('td', {'class': td_class})[0].text
-
-            # Financial Highlights:
-            self._logger.info("{}: Computing Financial Highlights...".format(ticker))
-            financial_highlights = all_html \
-                .find_all('div', {'class': statistics_section_class})[0] \
-                .find_all('table', {'class': table_class})
-
-            iteration_function(financial_highlights, td_class)
-
-            # Trading Information:
-            self._logger.info("{}: Computing Trading Information...".format(ticker))
-            trading_information = all_html \
-                .find_all('div', {'class': statistics_section_class2})[0] \
-                .find_all('table', {'class': table_class})
-
-            iteration_function(trading_information, td_class)
+            res = self.requester(url).body
+            cols, vals = self.parse_rows(res)
+            
+            for col, val in zip(cols, vals):
+                result_dict[col] = val
 
         except IndexError:
             self._logger.exception("{}: returned html not in expected format".format(ticker))
             raise IndexError
 
-        if len(result_dict) != 59:
-            self._logger.error("expected number of columns: 59, actual number of columns: {}".format(len(result_dict)))
+        if len(result_dict) != 60:
+            self._logger.error("expected number of columns: 60, actual number of columns: {}".format(len(result_dict)))
             sys.exit(1)
 
         # Temp list
