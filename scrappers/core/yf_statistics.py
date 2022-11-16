@@ -57,8 +57,6 @@ class YFStatistics(ScrapperAbstract):
         :param ticker: stock ticker symbol
         :return: None
         """
-
-        result_dict = OrderedDict()
         
         url = "https://ca.finance.yahoo.com/quote/" + ticker + "/key-statistics?p=" + ticker
         
@@ -67,45 +65,29 @@ class YFStatistics(ScrapperAbstract):
             self._logger.info("Sending requests for {}...".format(ticker))
             res = self.requester(url).body
             cols, vals = self.parse_rows(res)
-            
-            for col, val in zip(cols, vals):
-                result_dict[col] = val
 
         except IndexError:
             self._logger.exception("{}: returned html not in expected format".format(ticker))
             raise IndexError
 
-        if len(result_dict) != 60:
-            self._logger.error("expected number of columns: 60, actual number of columns: {}".format(len(result_dict)))
-            sys.exit(1)
-
-        # Temp list
-        col = []
-        val = []
-
-        for colnames, value in zip(result_dict.keys(), result_dict.values()):
-            col.append(colnames)
-            val.append(value)
-
         self._logger.info("{}: Converting string to numeric values...".format(ticker))
         # Convert all numbers to base of 1, 1M = 1,000,000, 1k = 1,000, 5% = 0.05
-        for item in result_dict.values():
-
+        for item in vals:
             try:
                 # Making sure we are not altering date values
                 if item[0:3] not in ('Mar', 'May'):
                     for characters in item:
                         if characters in ('B', 'M', 'k', '%'):
-                            index = val.index(item)
-                            val[index] = val[index].replace(characters, '')
+                            index = vals.index(item)
+                            vals[index] = vals[index].replace(characters, '')
                             if characters == 'B':
-                                val[index] = str(float(val[index].replace(',', '')) * 1000000000)
+                                vals[index] = str(float(vals[index].replace(',', '')) * 1000000000)
                             elif characters == 'k':
-                                val[index] = str(float(val[index].replace(',', '')) * 1000)
+                                vals[index] = str(float(vals[index].replace(',', '')) * 1000)
                             elif characters == 'M':
-                                val[index] = str(float(val[index].replace(',', '')) * 1000000)
+                                vals[index] = str(float(vals[index].replace(',', '')) * 1000000)
                             elif characters == '%':
-                                val[index] = str(float(val[index].replace(',', '')) / 100)
+                                vals[index] = str(float(vals[index].replace(',', '')) / 100)
             except Exception:
                 self._logger.exception("item {} caused an exception during conversion!".format(item))
 
@@ -114,9 +96,9 @@ class YFStatistics(ScrapperAbstract):
 
         # if self._dataframe already exists, append only
         if isinstance(None, type(self._dataframe)):
-            self._dataframe = pd.DataFrame(val, col, columns=[ticker])
+            self._dataframe = pd.DataFrame(vals, cols, columns=[ticker])
         else:
-            self._dataframe[ticker] = val
+            self._dataframe[ticker] = vals
 
         self._lock.release()
         self._logger.debug("{} unlocked".format(ticker))
