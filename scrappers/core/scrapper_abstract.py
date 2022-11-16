@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup as Soup
 from abc import ABC, abstractmethod
 from threading import Lock
+from typing import Union
 
 
 class ScrapperAbstract(ABC):
@@ -49,6 +50,19 @@ class ScrapperAbstract(ABC):
             return self.requester(url)
 
         return Soup(r.text, 'html.parser')
+    
+    def parse_rows(self, body: str) -> Union[list[str], list[str]]:
+        columns = []
+        values = []
+        
+        rows = body.find_all("tr")
+
+        for row in rows:
+            col , val =  row.find_all("td")
+            columns.append(col.span.text)
+            values.append(val.text)
+
+        return columns, values
 
     @abstractmethod
     def data_parser(self, ticker):

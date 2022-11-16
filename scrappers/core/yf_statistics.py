@@ -32,24 +32,10 @@ class YFStatistics(ScrapperAbstract):
         self._dataframe = None  # Place holder, original df
         self._df_downsized = None  # Place holder, downsized df
         self._target_list = None  # Place holder, name of the items being targeted as important
-        self._short_date = None  # Place holder, short float dates
         self._scoring_df = None  # Place holder, listing score for each category for all tickers
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
         self._ignored_stats = OrderedDict()  # place holder, showing all the stats that were ignored in the calculation
         self._lock = Lock()
-    
-    def parse_rows(self, body: str) -> Union[list[str], list[str]]:
-        columns = []
-        values = []
-        
-        rows = body.find_all("tr")
-
-        for row in rows:
-            col , val =  row.find_all("td")
-            columns.append(col.span.text)
-            values.append(val.text)
-
-        return columns, values
 
     def data_parser(self, ticker):
         """
@@ -131,12 +117,6 @@ class YFStatistics(ScrapperAbstract):
             DataWriter(self._logger).csv_writer(self._store_location, self._folder_name,
                                                 self._application_logic.get("file_names").get("data_stats"), self._dataframe)
 
-        # populating self.short_date list to be used in downsize method
-        self._short_date = []
-
-        for x, y in zip([44, 45, 48], [13, 12, 13]):
-            self._short_date.append(list(self._dataframe.index)[x][y:])
-
         self.__downsize()
         self.__scoring()
 
@@ -148,9 +128,6 @@ class YFStatistics(ScrapperAbstract):
         """
         # Class Attributes that are important to keep
         important_item = self._application_logic.get("important_item")
-        important_item.extend(['Shares Short ' + self._short_date[0],
-                               'Short Ratio ' + self._short_date[1],
-                               'Shares Short ' + self._short_date[2]])
 
         self._df_downsized = self._dataframe.filter(important_item, axis=0)
 

@@ -40,7 +40,7 @@ class DataWriter:
                 with open(full_path + self._separator + file_name, mode='w') as file:
                     for df in dataframes:
                         file.write("\n")
-                        df.to_csv(file, header=True)
+                        df.to_csv(file, header=True, line_terminator='\n')
             except IOError:
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))
 
@@ -50,6 +50,6 @@ class DataWriter:
                 with open(full_path + self._separator + file_name, mode='w') as file:
                     for ticker in dataframes_dict.keys():
                         file.write("\n{}\n".format(ticker))
-                        dataframes_dict.get(ticker).to_csv(file, header=True)
+                        dataframes_dict.get(ticker).to_csv(file, header=True, line_terminator='\n')
             except IOError:
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))
