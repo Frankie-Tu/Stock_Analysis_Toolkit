@@ -50,7 +50,8 @@ class ScrapperApp:
         score = statistics.get_score()
         ignored_stats = statistics.get_ignored_stats()
         summary_data = summary.get_summary()
-        trailing_pe_list = statistics.get_downsized_df().iloc[0, :]
+        trailing_pe_list = statistics.get_downsized_df().loc["Trailing P/E"]
+        pb_list =  statistics.get_downsized_df().loc["Price/Book"]
 
         if self.comprehensive:
             statement = YFStatement(self.tickers, self.store_location, self.config.get("statement").get("IS").get("folder_name"), self.file_save, statement_type="IS")
@@ -74,10 +75,10 @@ class ScrapperApp:
 
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n")
         summary_dict = OrderedDict()
-        summary_columns = ["Score", "Trailing PE", "Implied PEG", "Potential", "Price Percentile"]
-
+        summary_columns = ["Score", "Trailing PE", "Price/Book", "Implied PEG", "Potential", "Price Percentile"]
+        
         for ticker, value in zip(score.keys(), score.values()):
-            ticker_data = [round(value, 2), trailing_pe_list[ticker],
+            ticker_data = [round(value, 2), trailing_pe_list[ticker], pb_list[ticker],
                            implied_peg[ticker], str(summary_data.loc["Growth Potential", ticker]),
                            str(summary_data.loc["52 Week Percentile", ticker])]
 
@@ -105,7 +106,7 @@ if __name__ == "__main__":
     general_conf = config.get("general")
 
     if user_input == [""]:
-        user_input = general_conf.get("symbols")["group1"]
+        user_input = general_conf.get("symbols")["industry"]
 
     ScrapperApp(user_input, store_location=general_conf.get("store_location"),
-                file_save=general_conf.get("file_save"), comprehensive=True).scrapper_start()
+                file_save=general_conf.get("file_save"), comprehensive=False).scrapper_start()
