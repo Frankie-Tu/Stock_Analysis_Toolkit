@@ -36,6 +36,19 @@ class YFStatistics(ScrapperAbstract):
         self._scoring_dict = None  # place holder, total score for each ticker stored in dictionary
         self._ignored_stats = OrderedDict()  # place holder, showing all the stats that were ignored in the calculation
         self._lock = Lock()
+    
+    def parse_rows(self, body: str) -> Union[list[str], list[str]]:
+        columns = []
+        values = []
+        
+        rows = body.find_all("tr")
+
+        for row in rows:
+            col , val =  row.find_all("td")
+            columns.append(col.span.text)
+            values.append(val.text)
+
+        return columns, values
 
     def data_parser(self, ticker):
         """
