@@ -40,11 +40,11 @@ class ScrapperAbstract(ABC):
         }
 
         try:
-            r = requests.get(url, timeout=2, headers=headers)
+            r = requests.get(url, timeout=20, headers=headers)
 
             while r.status_code != 200:
                 self._logger.error("Attempt failed with status code: {}. Retrying...".format(r.status_code))
-                r = requests.get(url, timeout=2)
+                r = requests.get(url, timeout=20)
         except requests.exceptions.Timeout:
             self._logger.error("Attempt timed out for url: {}, retrying now...".format(url))
             return self.requester(url)
