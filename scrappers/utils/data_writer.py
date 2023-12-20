@@ -40,9 +40,12 @@ class DataWriter:
                 with open(full_path + self._separator + file_name, mode='w') as file:
                     for df in dataframes:
                         file.write("\n")
-                        df.to_csv(file, header=True, line_terminator='\n')
+                        df.to_csv(file, header=True, lineterminator='\n')
             except IOError:
                 self._logger.error("{} is in use! Result not saved.".format(full_path + self._separator + file_name))
+            
+            except Exception as e:
+                self._logger.exception(e)
 
         if len(dataframes_dict.keys()) != 0:
             try:
