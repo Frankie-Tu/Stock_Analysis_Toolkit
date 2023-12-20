@@ -4,6 +4,7 @@ Stock Data/
 .idea/
 .spyproject/
 *.pyc
+env/
 venv/
 Main*
 .vscode/
