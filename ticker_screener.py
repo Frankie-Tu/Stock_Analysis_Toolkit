@@ -5,9 +5,14 @@ from selenium.common.exceptions import NoSuchElementException
 import time
 
 class TickerScreener(ChromeDriver):
-    def __init__(self):
+    def __init__(self, industry=None):
         self.url = "https://ca.finance.yahoo.com/screener/"
+        self.industry = industry
         super().__init__(self.url)
+    
+    def get_tickers(self):
+        tickers = list(map(lambda x: x.text, self.driver.find_element(By.ID, "screener-results").find_elements(By.CSS_SELECTOR, '[data-test="quoteLink"]')))
+        return tickers
 
     def processing(self):        
         # waiting for user login
@@ -21,13 +26,22 @@ class TickerScreener(ChromeDriver):
         
         industries = list(map(lambda x: x.text, self.driver.find_element(By.ID, "screener-landing-user-defined").find_elements(By.TAG_NAME, "a")[1:]))
         
+        if self.industry:
+            industries = list(filter(lambda x: x==self.industry, industries))
+        
+        payload = {}
+        
         # clicking through the screeners
         for industry in industries:
             self.driver.find_element(By.LINK_TEXT, industry).click()
             time.sleep(5)
+            payload[industry]= self.get_tickers()
             self.driver.back()
             time.sleep(2)
         
+        print(f"Payload is as follows: {payload}")
+        
 
 if __name__ == "__main__":
-    TickerScreener()
+    sector_to_screen = "High Dividend"
+    TickerScreener(sector_to_screen)
