@@ -4,7 +4,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException 
 import time
 
-from scrappers.utils.decor import delayed_action
+from scrappers.utils.decor import retry
 
 class TickerScreener(ChromeDriver):
     def __init__(self, industry=None):
@@ -12,10 +12,18 @@ class TickerScreener(ChromeDriver):
         self.industry = industry
         super().__init__(self.url)
     
-    @delayed_action
+    @retry
     def get_tickers(self):
         tickers = list(map(lambda x: x.text, self.driver.find_element(By.ID, "screener-results").find_elements(By.CSS_SELECTOR, '[data-test="quoteLink"]')))
         return tickers
+
+    @retry
+    def find_element(self, by, value):
+        return self.driver.find_element(by,value)
+    
+    @retry 
+    def find_elements(self, by, value):
+        return self.driver.find_elements(by, value)
 
     def processing(self):        
         # waiting for user login
@@ -25,7 +33,7 @@ class TickerScreener(ChromeDriver):
                     break
             except NoSuchElementException:
                 print("waiting for user login....")
-                time.sleep(5)
+                time.sleep(1)
         
         industries = list(map(lambda x: x.text, self.driver.find_element(By.ID, "screener-landing-user-defined").find_elements(By.TAG_NAME, "a")[1:]))
         
@@ -36,14 +44,15 @@ class TickerScreener(ChromeDriver):
         
         # clicking through the screeners
         for industry in industries:
-            self.driver.find_element(By.LINK_TEXT, industry).click()
+            self.find_element(By.LINK_TEXT, industry).click()
+            print(f"getting tickers for: {industry}")
             payload[industry]= self.get_tickers()
             self.driver.back()
-            time.sleep(2)
 
         print(f"Payload is as follows: {payload}")
         
 
 if __name__ == "__main__":
     sectors_to_screen = ["High Dividend", "Energy"]
-    TickerScreener(sectors_to_screen)
+    # TickerScreener(sectors_to_screen)
+    TickerScreener()
