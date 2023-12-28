@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup as Soup
 from abc import ABC, abstractmethod
 from threading import Lock
 from typing import Union
+import time
 
 
 class ScrapperAbstract(ABC):
@@ -43,6 +44,7 @@ class ScrapperAbstract(ABC):
             r = requests.get(url, timeout=20, headers=headers)
 
             while r.status_code != 200:
+                time.sleep(2)
                 self._logger.error("Attempt failed with status code: {}. Retrying...".format(r.status_code))
                 r = requests.get(url, timeout=20)
         except requests.exceptions.Timeout:
