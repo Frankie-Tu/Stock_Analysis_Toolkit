@@ -1,10 +1,8 @@
 from lazy_scrapper.controller.selenium import ChromeDriver
+from lazy_scrapper.controller.decor import retry
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException 
 import time
-
-from scrappers.utils.decor import retry
 
 class TickerScreener(ChromeDriver):
     def __init__(self, industry=None):
