@@ -1,37 +1,20 @@
-from lazy_scrapper.controller.selenium import ChromeDriver
 from lazy_scrapper.controller.decor import retry
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException 
 import time
 
-class TickerScreener(ChromeDriver):
+from scrappers.web.yf_web_abstract import YfWebAbstract
+
+
+class TickerScreener(YfWebAbstract):
     def __init__(self, industry=None):
         self.url = "https://ca.finance.yahoo.com/screener/"
         self.industry = industry
         super().__init__(self.url)
-    
-    @retry
-    def get_tickers(self):
-        tickers = list(map(lambda x: x.text, self.driver.find_element(By.ID, "screener-results").find_elements(By.CSS_SELECTOR, '[data-test="quoteLink"]')))
-        return tickers
 
-    @retry
-    def find_element(self, by, value):
-        return self.driver.find_element(by,value)
-    
-    @retry 
-    def find_elements(self, by, value):
-        return self.driver.find_elements(by, value)
-
-    def processing(self):        
-        # waiting for user login
-        while True:
-            try:
-                if self.driver.find_element(By.ID, "uh-profile").text == "FRA":
-                    break
-            except NoSuchElementException:
-                print("waiting for user login....")
-                time.sleep(1)
+    def processing(self):
+        
+        self.pending_login()
         
         industries = list(map(lambda x: x.text, self.driver.find_element(By.ID, "screener-landing-user-defined").find_elements(By.TAG_NAME, "a")[1:]))
         
